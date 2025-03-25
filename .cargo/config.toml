@@ -1,0 +1,11 @@
+[patch.'https://github.com/oscomp/arceos.git']
+axstd = { path = "/work/.arceos/ulib/axstd" }
+arceos_posix_api = { path = "/work/.arceos/api/arceos_posix_api" }
+axhal = { path = "/work/.arceos/modules/axhal" }
+axmm = { path = "/work/.arceos/modules/axmm" }
+axtask = { path = "/work/.arceos/modules/axtask" }
+axsync = { path = "/work/.arceos/modules/axsync" }
+axruntime = { path = "/work/.arceos/modules/axruntime" }
+axns = { path = "/work/.arceos/modules/axns" }
+axfs = { path = "/work/.arceos/modules/axfs" }
+axconfig = { path = "/work/.arceos/modules/axconfig" }
