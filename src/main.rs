@@ -72,16 +72,24 @@ fn main() {
         .unwrap_or_else(|| "Please specify the testcases list by making user_apps")
         .split(',')
         .filter(|&x| !x.is_empty());
-
+    let mut i = 0;
     for testcase in testcases {
         let args = testcase
             .split_ascii_whitespace()
             .map(ToString::to_string)
             .collect::<Vec<_>>();
-
         let exit_code = run_user_app(&args, &[]);
         info!("User task {} exited with code: {:?}", testcase, exit_code);
+        i += 1;
+        if i == 32{
+            println!("#### OS COMP TEST GROUP END basic-musl ####");
+            println!("#### OS COMP TEST GROUP END basic-glibc ####");
+            println!("#### OS COMP TEST GROUP START libctest-glibc ####");
+            println!("#### OS COMP TEST GROUP START libctest-musl ####");
+        }else if i == 97{
+            println!("#### OS COMP TEST GROUP END libctest-musl ####");
+            println!("#### OS COMP TEST GROUP END libctest-glibc ####");
+        }
     }
-    println!("#### OS COMP TEST GROUP END basic-musl ####");
-    println!("#### OS COMP TEST GROUP END basic-glibc ####");
+
 }

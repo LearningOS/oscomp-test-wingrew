@@ -252,3 +252,45 @@ pub fn sys_statx(
         Err(LinuxError::ENOSYS)
     }
 }
+
+
+#[repr(C)]
+#[derive(Debug, Default)]
+pub struct Statfs {
+    pub f_type:i64,      /* 文件系统类型（见下文） */
+    pub f_bsize:i64,     /* 最优传输块大小 */
+    pub f_blocks:u64,    /* 文件系统的总数据块数 */
+    pub f_bfree:u64,     /* 文件系统的空闲块数 */
+    pub f_bavail:u64,    /* 对非特权用户可用的空闲块数 */
+    pub f_files:u64,     /* 文件系统的总 inode 数 */
+    pub f_ffree:u64,     /* 文件系统的空闲 inode 数 */
+    pub f_fsid:[i64; 2],   /* 文件系统 ID */
+    pub f_namelen:i64,   /* 文件名的最大长度 */
+    pub f_frsize:i64,    /* 碎片大小（自 Linux 2.6 起） */
+    pub f_flags:i64,     /* 文件系统的挂载标志（自 Linux 2.6.36 起） */
+    f_spare: [i64; 5],   /* 预留的填充字节，供将来使用 */
+}
+
+#[apply(syscall_instrument)]
+pub fn sys_statfs(
+    pathname: UserConstPtr<c_char>,
+    statfsbuf: UserPtr<Statfs>,
+) -> LinuxResult<isize> {
+    let path = pathname.get_as_str()?;
+    let _path = arceos_posix_api::handle_file_path(-1, Some(path.as_ptr() as _), false)?;
+    let statfs = unsafe { &mut *statfsbuf.get()? };
+    statfs.f_type = 0xEF53; // EXT4_SUPER_MAGIC
+    statfs.f_bsize = 4096;
+    statfs.f_blocks = 0;
+    statfs.f_bfree = 0;
+    statfs.f_bavail = 0;
+    statfs.f_files = 0;
+    statfs.f_ffree = 0;
+    statfs.f_fsid[0] = 0;
+    statfs.f_fsid[1] = 0;
+    statfs.f_namelen = 255;
+    statfs.f_frsize = 4096;
+    statfs.f_flags = 0;
+    statfs.f_spare = [0; 5];
+    Ok(0)
+}

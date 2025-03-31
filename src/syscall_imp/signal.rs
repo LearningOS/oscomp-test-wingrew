@@ -23,3 +23,13 @@ pub fn sys_rt_sigaction(
     warn!("sys_rt_sigaction: not implemented");
     Ok(0)
 }
+
+pub fn sys_rt_sigtimedwait(
+    _signum: i32,
+    _act: UserConstPtr<c_void>,
+    _oldact: UserPtr<c_void>,
+    _sigsetsize: usize,
+) -> LinuxResult<isize> {
+    warn!("sys_rt_sigaction: not implemented");
+    Ok(0)
+}

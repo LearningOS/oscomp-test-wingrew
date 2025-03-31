@@ -9,6 +9,7 @@ use axhal::{
 };
 
 use axmm::AddrSpace;
+use axstd::println;
 use axtask::TaskExtRef;
 use kernel_elf_parser::{AuxvEntry, ELFParser, app_stack_region};
 use memory_addr::{MemoryAddr, PAGE_SIZE_4K, VirtAddr};
@@ -93,7 +94,6 @@ pub fn load_user_app(
             Ok(SegmentData::Undefined(data)) => data,
             _ => panic!("Invalid data in Interp Elf Program Header"),
         };
-
         let mut interp_path = axfs::api::canonicalize(
             CStr::from_bytes_with_nul(interp)
                 .map_err(|_| AxError::InvalidData)?
