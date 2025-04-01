@@ -30,6 +30,7 @@
 /musl/basic/waitpid
 /musl/basic/write
 /musl/basic/yield
+
 /musl/runtest.exe -w entry-static.exe strverscmp
 /musl/runtest.exe -w entry-static.exe syscall_sign_extend
 /musl/runtest.exe -w entry-static.exe uselocale_0

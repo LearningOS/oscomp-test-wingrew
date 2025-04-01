@@ -1,0 +1,1024 @@
+start---riscv64
+Set AX_ROOT (ArceOS directory) to /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+    Creating FAT32 disk image "disk.img" ...
+mkfs.fat 4.2 (2021-01-31)
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+axconfig-gen configs/defconfig.toml configs/platforms/riscv64-qemu-virt.toml /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/configs/riscv64.toml -w smp=1 -w arch=riscv64 -w platform=riscv64-qemu-virt -o "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml"
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+cp /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/sdcard-riscv64.img /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos/disk.img
+make AX_TESTCASE=oscomp BLK=y NET=y FEATURES=fp_simd,lwext4_rs LOG=off run
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew'
+Set AX_ROOT (ArceOS directory) to /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos
+make[2]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+warning: disk image "disk.img" already exists!
+make[2]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[2]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+axconfig-gen configs/defconfig.toml configs/platforms/riscv64-qemu-virt.toml /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/configs/riscv64.toml -w smp=1 -w arch=riscv64 -w platform=riscv64-qemu-virt -o "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml" -c "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml"
+    Building App: oscomp-test-wingrew, Arch: riscv64, Platform: riscv64-qemu-virt, App type: rust
+cargo -C /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew build -Z unstable-options --target riscv64gc-unknown-none-elf --target-dir /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/target --release  --features "axstd/log-level-off axstd/fp_simd axstd/lwext4_rs"
+rust-objcopy --binary-architecture=riscv64 /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_riscv64-qemu-virt.elf --strip-all -O binary /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_riscv64-qemu-virt.bin
+    Running on qemu...
+# "-m 128M -smp 1 -machine virt -bios default -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_riscv64-qemu-virt.bin -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic"
+echo "qemu-system-riscv64 -m 128M -smp 1 -machine virt -bios default -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_riscv64-qemu-virt.bin -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic -s -S" >> debug_log.txt
+qemu-system-riscv64 -m 128M -smp 1 -machine virt -bios default -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_riscv64-qemu-virt.bin -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic
+OpenSBI v1.5.1
+   ____                    _____ ____ _____
+  / __ \                  / ____|  _ \_   _|
+ | |  | |_ __   ___ _ __ | (___ | |_) || |
+ | |  | | '_ \ / _ \ '_ \ \___ \|  _ < | |
+ | |__| | |_) |  __/ | | |____) | |_) || |_
+  \____/| .__/ \___|_| |_|_____/|____/_____|
+        | |
+        |_|
+Platform Name             : riscv-virtio,qemu
+Platform Features         : medeleg
+Platform HART Count       : 1
+Platform IPI Device       : aclint-mswi
+Platform Timer Device     : aclint-mtimer @ 10000000Hz
+Platform Console Device   : uart8250
+Platform HSM Device       : ---
+Platform PMU Device       : ---
+Platform Reboot Device    : syscon-reboot
+Platform Shutdown Device  : syscon-poweroff
+Platform Suspend Device   : ---
+Platform CPPC Device      : ---
+Firmware Base             : 0x80000000
+Firmware Size             : 327 KB
+Firmware RW Offset        : 0x40000
+Firmware RW Size          : 71 KB
+Firmware Heap Offset      : 0x49000
+Firmware Heap Size        : 35 KB (total), 2 KB (reserved), 11 KB (used), 21 KB (free)
+Firmware Scratch Size     : 4096 B (total), 416 B (used), 3680 B (free)
+Runtime SBI Version       : 2.0
+Domain0 Name              : root
+Domain0 Boot HART         : 0
+Domain0 HARTs             : 0*
+Domain0 Region00          : 0x0000000000100000-0x0000000000100fff M: (I,R,W) S/U: (R,W)
+Domain0 Region01          : 0x0000000010000000-0x0000000010000fff M: (I,R,W) S/U: (R,W)
+Domain0 Region02          : 0x0000000002000000-0x000000000200ffff M: (I,R,W) S/U: ()
+Domain0 Region03          : 0x0000000080040000-0x000000008005ffff M: (R,W) S/U: ()
+Domain0 Region04          : 0x0000000080000000-0x000000008003ffff M: (R,X) S/U: ()
+Domain0 Region05          : 0x000000000c400000-0x000000000c5fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region06          : 0x000000000c000000-0x000000000c3fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region07          : 0x0000000000000000-0xffffffffffffffff M: () S/U: (R,W,X)
+Domain0 Next Address      : 0x0000000080200000
+Domain0 Next Arg1         : 0x0000000087e00000
+Domain0 Next Mode         : S-mode
+Domain0 SysReset          : yes
+Domain0 SysSuspend        : yes
+Boot HART ID              : 0
+Boot HART Domain          : root
+Boot HART Priv Version    : v1.12
+Boot HART Base ISA        : rv64imafdch
+Boot HART ISA Extensions  : sstc,zicntr,zihpm,zicboz,zicbom,sdtrig,svadu
+Boot HART PMP Count       : 16
+Boot HART PMP Granularity : 2 bits
+Boot HART PMP Address Bits: 54
+Boot HART MHPM Info       : 16 (0x0007fff8)
+Boot HART Debug Triggers  : 2 triggers
+Boot HART MIDELEG         : 0x0000000000001666
+Boot HART MEDELEG         : 0x0000000000f0b509
+       d8888                            .d88888b.   .d8888b.
+      d88888                           d88P" "Y88b d88P  Y88b
+     d88P888                           888     888 Y88b.
+    d88P 888 888d888  .d8888b  .d88b.  888     888  "Y888b.
+   d88P  888 888P"   d88P"    d8P  Y8b 888     888     "Y88b.
+  d88P   888 888     888      88888888 888     888       "888
+ d8888888888 888     Y88b.    Y8b.     Y88b. .d88P Y88b  d88P
+d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
+arch = riscv64
+platform = riscv64-qemu-virt
+target = riscv64gc-unknown-none-elf
+build_mode = release
+log_level = off
+smp = 1
+#### OS COMP TEST GROUP START basic-glibc ####
+#### OS COMP TEST GROUP START basic-musl ####
+========== START test_brk ==========
+Before alloc,heap pos: 1073750016
+After alloc,heap pos: 1073750080
+Alloc again,heap pos: 1073750144
+========== END test_brk ==========
+========== START test_chdir ==========
+chdir ret: 0
+  current working dir : /musl/basic/test_chdir/
+========== END test_chdir ==========
+========== START test_close ==========
+  close 3 success.
+========== END test_close ==========
+========== START test_clone ==========
+  Child says successfully!
+clone process successfully.
+pid:8
+========== END test_clone ==========
+========== START test_dup2 ==========
+  from fd 100
+========== END test_dup2 ==========
+========== START test_dup ==========
+  new fd is 3.
+========== END test_dup ==========
+========== START test_execve ==========
+  I am test_echo.
+execve success.
+========== END main ==========
+========== START test_exit ==========
+exit OK.
+========== END test_exit ==========
+========== START test_fork ==========
+  child process.
+  parent process. wstatus:0
+========== END test_fork ==========
+========== START test_fstat ==========
+fstat ret: 0
+fstat: dev: 0, inode: 1, mode: 33188, nlink: 1, size: 52, atime: 0, mtime: 0, ctime: 0
+========== END test_fstat ==========
+========== START test_getcwd ==========
+getcwd: /musl/basic/ successfully!
+========== END test_getcwd ==========
+========== START test_getdents ==========
+open fd:3
+getdents fd:507
+getdents success.
+brk
+========== END test_getdents ==========
+========== START test_getpid ==========
+getpid success.
+pid = 19
+========== END test_getpid ==========
+========== START test_getppid ==========
+  getppid success. ppid : 1
+========== END test_getppid ==========
+========== START test_gettimeofday ==========
+gettimeofday success.
+start:2156, end:2195
+interval: 39
+========== END test_gettimeofday ==========
+========== START test_mkdir ==========
+mkdir ret: 0
+  mkdir success.
+========== END test_mkdir ==========
+========== START test_mmap ==========
+file len: 27
+mmap content:   Hello, mmap successfully!
+========== END test_mmap ==========
+========== START test_munmap ==========
+file len: 27
+munmap return: 0
+munmap successfully!
+========== END test_munmap ==========
+========== START test_mount ==========
+Mounting dev:/dev/vda2 to ./mnt
+mount return: 0
+mount successfully
+umount return: 0
+========== END test_mount ==========
+========== START test_openat ==========
+open dir fd: 3
+openat fd: 4
+openat success.
+========== END test_openat ==========
+========== START test_open ==========
+Hi, this is a text file.
+syscalls testing success!
+========== END test_open ==========
+========== START test_sleep ==========
+sleep success.
+========== END test_sleep ==========
+========== START test_pipe ==========
+cpid: 30
+cpid: 0
+  Write to pipe successfully.
+========== END test_pipe ==========
+========== START test_read ==========
+Hi, this is a text file.
+syscalls testing success!
+========== END test_read ==========
+========== START test_times ==========
+mytimes success
+{tms_utime:4421808, tms_stime:4352, tms_cutime:4421808, tms_cstime:4352}
+========== END test_times ==========
+========== START test_umount ==========
+Mounting dev:/dev/vda2 to ./mnt
+mount return: 0
+umount success.
+return: 0
+========== END test_umount ==========
+========== START test_uname ==========
+Uname: Starry Starry - machine[0] 10.0.0 10.0.0 10.0.0 https://github.com/BattiestStone4/Starry-On-ArceOS
+========== END test_uname ==========
+========== START test_unlink ==========
+  unlink success!
+========== END test_unlink ==========
+========== START test_wait ==========
+This is child process
+wait child success.
+wstatus: 0
+========== END test_wait ==========
+========== START test_waitpid ==========
+This is child process
+waitpid successfully.
+wstatus: 3
+========== END test_waitpid ==========
+========== START test_write ==========
+Hello operating system contest.
+========== END test_write ==========
+========== START test_yield ==========
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+========== END test_yield ==========
+#### OS COMP TEST GROUP END basic-musl ####
+#### OS COMP TEST GROUP END basic-glibc ####
+#### OS COMP TEST GROUP START libctest-glibc ####
+#### OS COMP TEST GROUP START libctest-musl ####
+========== START entry-static.exe strverscmp ==========
+Pass!
+========== END entry-static.exe strverscmp ==========
+========== START entry-static.exe syscall_sign_extend ==========
+Pass!
+========== END entry-static.exe syscall_sign_extend ==========
+========== START entry-static.exe uselocale_0 ==========
+Pass!
+========== END entry-static.exe uselocale_0 ==========
+========== START entry-static.exe wcsncpy_read_overflow ==========
+Pass!
+========== END entry-static.exe wcsncpy_read_overflow ==========
+========== START entry-static.exe wcsstr_false_negative ==========
+Pass!
+========== END entry-static.exe wcsstr_false_negative ==========
+========== START entry-static.exe sigprocmask_internal ==========
+Pass!
+========== END entry-static.exe sigprocmask_internal ==========
+========== START entry-static.exe scanf_bytes_consumed ==========
+Pass!
+========== END entry-static.exe scanf_bytes_consumed ==========
+========== START entry-static.exe scanf_match_literal_eof ==========
+Pass!
+========== END entry-static.exe scanf_match_literal_eof ==========
+========== START entry-static.exe scanf_nullbyte_char ==========
+Pass!
+========== END entry-static.exe scanf_nullbyte_char ==========
+========== START entry-static.exe putenv_doublefree ==========
+Pass!
+========== END entry-static.exe putenv_doublefree ==========
+========== START entry-static.exe regex_backref_0 ==========
+Pass!
+========== END entry-static.exe regex_backref_0 ==========
+========== START entry-static.exe regex_bracket_icase ==========
+Pass!
+========== END entry-static.exe regex_bracket_icase ==========
+========== START entry-static.exe regex_ere_backref ==========
+Pass!
+========== END entry-static.exe regex_ere_backref ==========
+========== START entry-static.exe regex_escaped_high_byte ==========
+Pass!
+========== END entry-static.exe regex_escaped_high_byte ==========
+========== START entry-static.exe regex_negated_range ==========
+Pass!
+========== END entry-static.exe regex_negated_range ==========
+========== START entry-static.exe regexec_nosub ==========
+Pass!
+========== END entry-static.exe regexec_nosub ==========
+========== START entry-static.exe malloc_0 ==========
+Pass!
+========== END entry-static.exe malloc_0 ==========
+========== START entry-static.exe mbsrtowcs_overflow ==========
+Pass!
+========== END entry-static.exe mbsrtowcs_overflow ==========
+========== START entry-static.exe memmem_oob_read ==========
+Pass!
+========== END entry-static.exe memmem_oob_read ==========
+========== START entry-static.exe memmem_oob ==========
+Pass!
+========== END entry-static.exe memmem_oob ==========
+========== START entry-static.exe mkdtemp_failure ==========
+Pass!
+========== END entry-static.exe mkdtemp_failure ==========
+========== START entry-static.exe mkstemp_failure ==========
+Pass!
+========== END entry-static.exe mkstemp_failure ==========
+========== START entry-static.exe getpwnam_r_crash ==========
+Pass!
+========== END entry-static.exe getpwnam_r_crash ==========
+========== START entry-static.exe getpwnam_r_errno ==========
+Pass!
+========== END entry-static.exe getpwnam_r_errno ==========
+========== START entry-static.exe iconv_roundtrips ==========
+Pass!
+========== END entry-static.exe iconv_roundtrips ==========
+========== START entry-static.exe inet_ntop_v4mapped ==========
+Pass!
+========== END entry-static.exe inet_ntop_v4mapped ==========
+========== START entry-static.exe inet_pton_empty_last_field ==========
+Pass!
+========== END entry-static.exe inet_pton_empty_last_field ==========
+========== START entry-static.exe iswspace_null ==========
+Pass!
+========== END entry-static.exe iswspace_null ==========
+========== START entry-static.exe lrand48_signextend ==========
+Pass!
+========== END entry-static.exe lrand48_signextend ==========
+========== START entry-static.exe fpclassify_invalid_ld80 ==========
+Pass!
+========== END entry-static.exe fpclassify_invalid_ld80 ==========
+========== START entry-static.exe fgets_eof ==========
+Pass!
+========== END entry-static.exe fgets_eof ==========
+========== START entry-static.exe dn_expand_empty ==========
+Pass!
+========== END entry-static.exe dn_expand_empty ==========
+========== START entry-static.exe dn_expand_ptr_0 ==========
+Pass!
+========== END entry-static.exe dn_expand_ptr_0 ==========
+========== START entry-static.exe wcsstr ==========
+Pass!
+========== END entry-static.exe wcsstr ==========
+========== START entry-static.exe wcstol ==========
+Pass!
+========== END entry-static.exe wcstol ==========
+========== START entry-static.exe time ==========
+Pass!
+========== END entry-static.exe time ==========
+========== START entry-static.exe tls_align ==========
+Pass!
+========== END entry-static.exe tls_align ==========
+========== START entry-static.exe udiv ==========
+Pass!
+========== END entry-static.exe udiv ==========
+========== START entry-static.exe strtol ==========
+Pass!
+========== END entry-static.exe strtol ==========
+========== START entry-static.exe strftime ==========
+Pass!
+========== END entry-static.exe strftime ==========
+========== START entry-static.exe string ==========
+Pass!
+========== END entry-static.exe string ==========
+========== START entry-static.exe string_memcpy ==========
+Pass!
+========== END entry-static.exe string_memcpy ==========
+========== START entry-static.exe string_memmem ==========
+Pass!
+========== END entry-static.exe string_memmem ==========
+========== START entry-static.exe string_memset ==========
+Pass!
+========== END entry-static.exe string_memset ==========
+========== START entry-static.exe string_strchr ==========
+Pass!
+========== END entry-static.exe string_strchr ==========
+========== START entry-static.exe string_strcspn ==========
+Pass!
+========== END entry-static.exe string_strcspn ==========
+========== START entry-static.exe string_strstr ==========
+Pass!
+========== END entry-static.exe string_strstr ==========
+========== START entry-static.exe strptime ==========
+Pass!
+========== END entry-static.exe strptime ==========
+========== START entry-static.exe argv ==========
+Pass!
+========== END entry-static.exe argv ==========
+========== START entry-static.exe basename ==========
+Pass!
+========== END entry-static.exe basename ==========
+========== START entry-static.exe clocale_mbfuncs ==========
+Pass!
+========== END entry-static.exe clocale_mbfuncs ==========
+========== START entry-static.exe clock_gettime ==========
+Pass!
+========== END entry-static.exe clock_gettime ==========
+========== START entry-static.exe dirname ==========
+Pass!
+========== END entry-static.exe dirname ==========
+========== START entry-static.exe env ==========
+Pass!
+========== END entry-static.exe env ==========
+========== START entry-static.exe fnmatch ==========
+Pass!
+========== END entry-static.exe fnmatch ==========
+========== START entry-static.exe iconv_open ==========
+Pass!
+========== END entry-static.exe iconv_open ==========
+========== START entry-static.exe inet_pton ==========
+Pass!
+========== END entry-static.exe inet_pton ==========
+========== START entry-static.exe mbc ==========
+Pass!
+========== END entry-static.exe mbc ==========
+========== START entry-static.exe memstream ==========
+Pass!
+========== END entry-static.exe memstream ==========
+========== START entry-static.exe qsort ==========
+Pass!
+========== END entry-static.exe qsort ==========
+========== START entry-static.exe random ==========
+Pass!
+========== END entry-static.exe random ==========
+========== START entry-static.exe search_hsearch ==========
+Pass!
+========== END entry-static.exe search_hsearch ==========
+========== START entry-static.exe search_insque ==========
+Pass!
+========== END entry-static.exe search_insque ==========
+========== START entry-static.exe search_lsearch ==========
+Pass!
+========== END entry-static.exe search_lsearch ==========
+========== START entry-static.exe search_tsearch ==========
+Pass!
+========== END entry-static.exe search_tsearch ==========
+#### OS COMP TEST GROUP END libctest-musl ####
+#### OS COMP TEST GROUP END libctest-glibc ####
+make[2]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew'
+end---riscv64
+start---loongarch64
+Set AX_ROOT (ArceOS directory) to /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+warning: disk image "disk.img" already exists!
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+axconfig-gen configs/defconfig.toml configs/platforms/loongarch64-qemu-virt.toml /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/configs/loongarch64.toml -w smp=1 -w arch=loongarch64 -w platform=loongarch64-qemu-virt -o "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml"
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+cp /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/sdcard-loongarch64.img /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos/disk.img
+make AX_TESTCASE=oscomp BLK=y NET=y FEATURES=fp_simd,lwext4_rs LOG=off run
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew'
+Set AX_ROOT (ArceOS directory) to /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos
+make[2]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+warning: disk image "disk.img" already exists!
+make[2]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[2]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+axconfig-gen configs/defconfig.toml configs/platforms/loongarch64-qemu-virt.toml /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/configs/loongarch64.toml -w smp=1 -w arch=loongarch64 -w platform=loongarch64-qemu-virt -o "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml" -c "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml"
+    Building App: oscomp-test-wingrew, Arch: loongarch64, Platform: loongarch64-qemu-virt, App type: rust
+cargo -C /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew build -Z unstable-options --target loongarch64-unknown-none --target-dir /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/target --release  --features "axstd/log-level-off axstd/fp_simd axstd/lwext4_rs"
+rust-objcopy --binary-architecture=loongarch64 /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_loongarch64-qemu-virt.elf --strip-all -O binary /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_loongarch64-qemu-virt.bin
+    Running on qemu...
+# "-m 1G -smp 1 -machine virt -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_loongarch64-qemu-virt.elf -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic"
+echo "qemu-system-loongarch64 -m 1G -smp 1 -machine virt -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_loongarch64-qemu-virt.elf -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic -s -S" >> debug_log.txt
+qemu-system-loongarch64 -m 1G -smp 1 -machine virt -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_loongarch64-qemu-virt.elf -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic
+       d8888                            .d88888b.   .d8888b.
+      d88888                           d88P" "Y88b d88P  Y88b
+     d88P888                           888     888 Y88b.
+    d88P 888 888d888  .d8888b  .d88b.  888     888  "Y888b.
+   d88P  888 888P"   d88P"    d8P  Y8b 888     888     "Y88b.
+  d88P   888 888     888      88888888 888     888       "888
+ d8888888888 888     Y88b.    Y8b.     Y88b. .d88P Y88b  d88P
+d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
+arch = loongarch64
+platform = loongarch64-qemu-virt
+target = loongarch64-unknown-none
+build_mode = release
+log_level = off
+smp = 1
+#### OS COMP TEST GROUP START basic-glibc ####
+#### OS COMP TEST GROUP START basic-musl ####
+========== START test_brk ==========
+Before alloc,heap pos: 1073750016
+After alloc,heap pos: 1073750080
+Alloc again,heap pos: 1073750144
+========== END test_brk ==========
+========== START test_chdir ==========
+chdir ret: 0
+  current working dir : /musl/basic/test_chdir/
+========== END test_chdir ==========
+========== START test_close ==========
+  close 3 success.
+========== END test_close ==========
+========== START test_clone ==========
+  Child says successfully!
+clone process successfully.
+pid:8
+========== END test_clone ==========
+========== START test_dup2 ==========
+  from fd 100
+========== END test_dup2 ==========
+========== START test_dup ==========
+  new fd is 3.
+========== END test_dup ==========
+========== START test_execve ==========
+  I am test_echo.
+execve success.
+========== END main ==========
+========== START test_exit ==========
+exit OK.
+========== END test_exit ==========
+========== START test_fork ==========
+  child process.
+  parent process. wstatus:0
+========== END test_fork ==========
+========== START test_fstat ==========
+fstat ret: 0
+fstat: dev: 876544, inode: 1, mode: 33188, nlink: 1, size: 52, atime: 0, mtime: 0, ctime: 0
+========== END test_fstat ==========
+========== START test_getcwd ==========
+getcwd: /musl/basic/ successfully!
+========== END test_getcwd ==========
+========== START test_getdents ==========
+open fd:3
+getdents fd:508
+getdents success.
+brk
+========== END test_getdents ==========
+========== START test_getpid ==========
+getpid success.
+pid = 19
+========== END test_getpid ==========
+========== START test_getppid ==========
+  getppid success. ppid : 1
+========== END test_getppid ==========
+========== START test_gettimeofday ==========
+gettimeofday success.
+start:2131, end:2170
+interval: 39
+========== END test_gettimeofday ==========
+========== START test_mkdir ==========
+mkdir ret: 0
+  mkdir success.
+========== END test_mkdir ==========
+========== START test_mmap ==========
+file len: 27
+mmap content:   Hello, mmap successfully!
+========== END test_mmap ==========
+========== START test_munmap ==========
+file len: 27
+munmap return: 0
+munmap successfully!
+========== END test_munmap ==========
+========== START test_mount ==========
+Mounting dev:/dev/vda2 to ./mnt
+mount return: 0
+mount successfully
+umount return: 0
+========== END test_mount ==========
+========== START test_openat ==========
+open dir fd: 3
+openat fd: 4
+openat success.
+========== END test_openat ==========
+========== START test_open ==========
+Hi, this is a text file.
+syscalls testing success!
+========== END test_open ==========
+========== START test_sleep ==========
+sleep success.
+========== END test_sleep ==========
+========== START test_pipe ==========
+cpid: 30
+cpid: 0
+  Write to pipe successfully.
+========== END test_pipe ==========
+========== START test_read ==========
+Hi, this is a text file.
+syscalls testing success!
+========== END test_read ==========
+========== START test_times ==========
+mytimes success
+{tms_utime:4441078, tms_stime:3772, tms_cutime:4441078, tms_cstime:3772}
+========== END test_times ==========
+========== START test_umount ==========
+Mounting dev:/dev/vda2 to ./mnt
+mount return: 0
+umount success.
+return: 0
+========== END test_umount ==========
+========== START test_uname ==========
+Uname: Starry Starry - machine[0] 10.0.0 10.0.0 10.0.0 https://github.com/BattiestStone4/Starry-On-ArceOS
+========== END test_uname ==========
+========== START test_unlink ==========
+  unlink success!
+========== END test_unlink ==========
+========== START test_wait ==========
+This is child process
+wait child success.
+wstatus: 0
+========== END test_wait ==========
+========== START test_waitpid ==========
+This is child process
+waitpid successfully.
+wstatus: 3
+========== END test_waitpid ==========
+========== START test_write ==========
+Hello operating system contest.
+========== END test_write ==========
+========== START test_yield ==========
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+========== END test_yield ==========
+#### OS COMP TEST GROUP END basic-musl ####
+#### OS COMP TEST GROUP END basic-glibc ####
+#### OS COMP TEST GROUP START libctest-glibc ####
+#### OS COMP TEST GROUP START libctest-musl ####
+========== START entry-static.exe strverscmp ==========
+Pass!
+========== END entry-static.exe strverscmp ==========
+========== START entry-static.exe syscall_sign_extend ==========
+Pass!
+========== END entry-static.exe syscall_sign_extend ==========
+========== START entry-static.exe uselocale_0 ==========
+Pass!
+========== END entry-static.exe uselocale_0 ==========
+========== START entry-static.exe wcsncpy_read_overflow ==========
+Pass!
+========== END entry-static.exe wcsncpy_read_overflow ==========
+========== START entry-static.exe wcsstr_false_negative ==========
+Pass!
+========== END entry-static.exe wcsstr_false_negative ==========
+========== START entry-static.exe sigprocmask_internal ==========
+Pass!
+========== END entry-static.exe sigprocmask_internal ==========
+========== START entry-static.exe scanf_bytes_consumed ==========
+Pass!
+========== END entry-static.exe scanf_bytes_consumed ==========
+========== START entry-static.exe scanf_match_literal_eof ==========
+Pass!
+========== END entry-static.exe scanf_match_literal_eof ==========
+========== START entry-static.exe scanf_nullbyte_char ==========
+Pass!
+========== END entry-static.exe scanf_nullbyte_char ==========
+========== START entry-static.exe putenv_doublefree ==========
+Pass!
+========== END entry-static.exe putenv_doublefree ==========
+========== START entry-static.exe regex_backref_0 ==========
+Pass!
+========== END entry-static.exe regex_backref_0 ==========
+========== START entry-static.exe regex_bracket_icase ==========
+Pass!
+========== END entry-static.exe regex_bracket_icase ==========
+========== START entry-static.exe regex_ere_backref ==========
+Pass!
+========== END entry-static.exe regex_ere_backref ==========
+========== START entry-static.exe regex_escaped_high_byte ==========
+Pass!
+========== END entry-static.exe regex_escaped_high_byte ==========
+========== START entry-static.exe regex_negated_range ==========
+Pass!
+========== END entry-static.exe regex_negated_range ==========
+========== START entry-static.exe regexec_nosub ==========
+Pass!
+========== END entry-static.exe regexec_nosub ==========
+========== START entry-static.exe malloc_0 ==========
+Pass!
+========== END entry-static.exe malloc_0 ==========
+========== START entry-static.exe mbsrtowcs_overflow ==========
+Pass!
+========== END entry-static.exe mbsrtowcs_overflow ==========
+========== START entry-static.exe memmem_oob_read ==========
+Pass!
+========== END entry-static.exe memmem_oob_read ==========
+========== START entry-static.exe memmem_oob ==========
+Pass!
+========== END entry-static.exe memmem_oob ==========
+========== START entry-static.exe mkdtemp_failure ==========
+Pass!
+========== END entry-static.exe mkdtemp_failure ==========
+========== START entry-static.exe mkstemp_failure ==========
+Pass!
+========== END entry-static.exe mkstemp_failure ==========
+========== START entry-static.exe getpwnam_r_crash ==========
+Pass!
+========== END entry-static.exe getpwnam_r_crash ==========
+========== START entry-static.exe getpwnam_r_errno ==========
+Pass!
+========== END entry-static.exe getpwnam_r_errno ==========
+========== START entry-static.exe iconv_roundtrips ==========
+Pass!
+========== END entry-static.exe iconv_roundtrips ==========
+========== START entry-static.exe inet_ntop_v4mapped ==========
+Pass!
+========== END entry-static.exe inet_ntop_v4mapped ==========
+========== START entry-static.exe inet_pton_empty_last_field ==========
+Pass!
+========== END entry-static.exe inet_pton_empty_last_field ==========
+========== START entry-static.exe iswspace_null ==========
+Pass!
+========== END entry-static.exe iswspace_null ==========
+========== START entry-static.exe lrand48_signextend ==========
+Pass!
+========== END entry-static.exe lrand48_signextend ==========
+========== START entry-static.exe fpclassify_invalid_ld80 ==========
+Pass!
+========== END entry-static.exe fpclassify_invalid_ld80 ==========
+========== START entry-static.exe fgets_eof ==========
+Pass!
+========== END entry-static.exe fgets_eof ==========
+========== START entry-static.exe dn_expand_empty ==========
+Pass!
+========== END entry-static.exe dn_expand_empty ==========
+========== START entry-static.exe dn_expand_ptr_0 ==========
+Pass!
+========== END entry-static.exe dn_expand_ptr_0 ==========
+========== START entry-static.exe wcsstr ==========
+Pass!
+========== END entry-static.exe wcsstr ==========
+========== START entry-static.exe wcstol ==========
+Pass!
+========== END entry-static.exe wcstol ==========
+========== START entry-static.exe time ==========
+Pass!
+========== END entry-static.exe time ==========
+========== START entry-static.exe tls_align ==========
+Pass!
+========== END entry-static.exe tls_align ==========
+========== START entry-static.exe udiv ==========
+Pass!
+========== END entry-static.exe udiv ==========
+========== START entry-static.exe strtol ==========
+Pass!
+========== END entry-static.exe strtol ==========
+========== START entry-static.exe strftime ==========
+Pass!
+========== END entry-static.exe strftime ==========
+========== START entry-static.exe string ==========
+Pass!
+========== END entry-static.exe string ==========
+========== START entry-static.exe string_memcpy ==========
+Pass!
+========== END entry-static.exe string_memcpy ==========
+========== START entry-static.exe string_memmem ==========
+Pass!
+========== END entry-static.exe string_memmem ==========
+========== START entry-static.exe string_memset ==========
+Pass!
+========== END entry-static.exe string_memset ==========
+========== START entry-static.exe string_strchr ==========
+Pass!
+========== END entry-static.exe string_strchr ==========
+========== START entry-static.exe string_strcspn ==========
+Pass!
+========== END entry-static.exe string_strcspn ==========
+========== START entry-static.exe string_strstr ==========
+Pass!
+========== END entry-static.exe string_strstr ==========
+========== START entry-static.exe strptime ==========
+Pass!
+========== END entry-static.exe strptime ==========
+========== START entry-static.exe argv ==========
+Pass!
+========== END entry-static.exe argv ==========
+========== START entry-static.exe basename ==========
+Pass!
+========== END entry-static.exe basename ==========
+========== START entry-static.exe clocale_mbfuncs ==========
+Pass!
+========== END entry-static.exe clocale_mbfuncs ==========
+========== START entry-static.exe clock_gettime ==========
+Pass!
+========== END entry-static.exe clock_gettime ==========
+========== START entry-static.exe dirname ==========
+Pass!
+========== END entry-static.exe dirname ==========
+========== START entry-static.exe env ==========
+Pass!
+========== END entry-static.exe env ==========
+========== START entry-static.exe fnmatch ==========
+Pass!
+========== END entry-static.exe fnmatch ==========
+========== START entry-static.exe iconv_open ==========
+Pass!
+========== END entry-static.exe iconv_open ==========
+========== START entry-static.exe inet_pton ==========
+Pass!
+========== END entry-static.exe inet_pton ==========
+========== START entry-static.exe mbc ==========
+Pass!
+========== END entry-static.exe mbc ==========
+========== START entry-static.exe memstream ==========
+Pass!
+========== END entry-static.exe memstream ==========
+========== START entry-static.exe qsort ==========
+Pass!
+========== END entry-static.exe qsort ==========
+========== START entry-static.exe random ==========
+Pass!
+========== END entry-static.exe random ==========
+========== START entry-static.exe search_hsearch ==========
+Pass!
+========== END entry-static.exe search_hsearch ==========
+========== START entry-static.exe search_insque ==========
+Pass!
+========== END entry-static.exe search_insque ==========
+========== START entry-static.exe search_lsearch ==========
+Pass!
+========== END entry-static.exe search_lsearch ==========
+========== START entry-static.exe search_tsearch ==========
+Pass!
+========== END entry-static.exe search_tsearch ==========
+#### OS COMP TEST GROUP END libctest-musl ####
+#### OS COMP TEST GROUP END libctest-glibc ####
+make[2]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew'
+end---loongarch64
+start---aarch64
+Set AX_ROOT (ArceOS directory) to /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+warning: disk image "disk.img" already exists!
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+axconfig-gen configs/defconfig.toml configs/platforms/aarch64-qemu-virt.toml /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/configs/aarch64.toml -w smp=1 -w arch=aarch64 -w platform=aarch64-qemu-virt -o "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml"
+make[1]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+cp /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/sdcard-aarch64.img /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos/disk.img
+make AX_TESTCASE=oscomp BLK=y NET=y FEATURES=fp_simd,lwext4_rs LOG=off run
+make[1]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew'
+Set AX_ROOT (ArceOS directory) to /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos
+make[2]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+warning: disk image "disk.img" already exists!
+make[2]: Leaving directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+make[2]: Entering directory '/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.arceos'
+axconfig-gen configs/defconfig.toml configs/platforms/aarch64-qemu-virt.toml /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/configs/aarch64.toml -w smp=1 -w arch=aarch64 -w platform=aarch64-qemu-virt -o "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml" -c "/home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/.axconfig.toml"
+    Building App: oscomp-test-wingrew, Arch: aarch64, Platform: aarch64-qemu-virt, App type: rust
+cargo -C /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew build -Z unstable-options --target aarch64-unknown-none --target-dir /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/target --release  --features "axstd/log-level-off axstd/fp_simd axstd/lwext4_rs"
+rust-objcopy --binary-architecture=aarch64 /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_aarch64-qemu-virt.elf --strip-all -O binary /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_aarch64-qemu-virt.bin
+    Running on qemu...
+# "-m 128M -smp 1 -cpu cortex-a72 -machine virt -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_aarch64-qemu-virt.bin -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic"
+echo "qemu-system-aarch64 -m 128M -smp 1 -cpu cortex-a72 -machine virt -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_aarch64-qemu-virt.bin -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic -s -S" >> debug_log.txt
+qemu-system-aarch64 -m 128M -smp 1 -cpu cortex-a72 -machine virt -kernel /home/runner/work/oscomp-test-wingrew/oscomp-test-wingrew/oscomp-test-wingrew_aarch64-qemu-virt.bin -device virtio-blk-pci,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 -nographic
+       d8888                            .d88888b.   .d8888b.
+      d88888                           d88P" "Y88b d88P  Y88b
+     d88P888                           888     888 Y88b.
+    d88P 888 888d888  .d8888b  .d88b.  888     888  "Y888b.
+   d88P  888 888P"   d88P"    d8P  Y8b 888     888     "Y88b.
+  d88P   888 888     888      88888888 888     888       "888
+ d8888888888 888     Y88b.    Y8b.     Y88b. .d88P Y88b  d88P
+d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none
+build_mode = release
+log_level = off
+smp = 1
+#### OS COMP TEST GROUP START basic-glibc ####
+#### OS COMP TEST GROUP START basic-musl ####
+========== START test_brk ==========
+Before alloc,heap pos: 1073750016
+After alloc,heap pos: 1073750080
+Alloc again,heap pos: 1073750144
+========== END test_brk ==========
+========== START test_chdir ==========
+chdir ret: 0
+  current working dir : /musl/basic/test_chdir/
+========== END test_chdir ==========
+========== START test_close ==========
+  close 3 success.
+========== END test_close ==========
+========== START test_clone ==========
+  Child says successfully!
+clone process successfully.
+pid:8
+========== END test_clone ==========
+========== START test_dup2 ==========
+  from fd 100
+========== END test_dup2 ==========
+========== START test_dup ==========
+  new fd is 3.
+========== END test_dup ==========
+========== START test_execve ==========
+  I am test_echo.
+execve success.
+========== END main ==========
+========== START test_exit ==========
+exit OK.
+========== END test_exit ==========
+========== START test_fork ==========
+  child process.
+  parent process. wstatus:0
+========== END test_fork ==========
+========== START test_fstat ==========
+fstat ret: 0
+fstat: dev: 0, inode: 1, mode: 33188, nlink: 1, size: 52, atime: 0, mtime: 0, ctime: 0
+========== END test_fstat ==========
+========== START test_getcwd ==========
+getcwd: /musl/basic/ successfully!
+========== END test_getcwd ==========
+========== START test_getdents ==========
+open fd:3
+getdents fd:507
+getdents success.
+brk
+========== END test_getdents ==========
+========== START test_getpid ==========
+getpid success.
+pid = 19
+========== END test_getpid ==========
+========== START test_getppid ==========
+  getppid success. ppid : 1
+========== END test_getppid ==========
+========== START test_gettimeofday ==========
+gettimeofday success.
+start:2092, end:2133
+interval: 41
+========== END test_gettimeofday ==========
+========== START test_mkdir ==========
+mkdir ret: 0
+  mkdir success.
+========== END test_mkdir ==========
+========== START test_mmap ==========
+file len: 27
+mmap content:   Hello, mmap successfully!
+========== END test_mmap ==========
+========== START test_munmap ==========
+file len: 27
+munmap return: 0
+munmap successfully!
+========== END test_munmap ==========
+========== START test_mount ==========
+Mounting dev:/dev/vda2 to ./mnt
+mount return: 0
+mount successfully
+umount return: 0
+========== END test_mount ==========
+========== START test_openat ==========
+open dir fd: 3
+openat fd: 4
+openat success.
+========== END test_openat ==========
+========== START test_open ==========
+Hi, this is a text file.
+syscalls testing success!
+========== END test_open ==========
+========== START test_sleep ==========
+sleep success.
+========== END test_sleep ==========
+========== START test_pipe ==========
+cpid: 30
+cpid: 0
+  Write to pipe successfully.
+========== END test_pipe ==========
+========== START test_read ==========
+Hi, this is a text file.
+syscalls testing success!
+========== END test_read ==========
+========== START test_times ==========
+mytimes success
+{tms_utime:4361806, tms_stime:4569, tms_cutime:4361806, tms_cstime:4569}
+========== END test_times ==========
+========== START test_umount ==========
+Mounting dev:/dev/vda2 to ./mnt
+mount return: 0
+umount success.
+return: 0
+========== END test_umount ==========
+========== START test_uname ==========
+Uname: Starry Starry - machine[0] 10.0.0 10.0.0 10.0.0 https://github.com/BattiestStone4/Starry-On-ArceOS
+========== END test_uname ==========
+========== START test_unlink ==========
+  unlink success!
+========== END test_unlink ==========
+========== START test_wait ==========
+This is child process
+wait child success.
+wstatus: 0
+========== END test_wait ==========
+========== START test_waitpid ==========
+This is child process
+waitpid successfully.
+wstatus: 3
+========== END test_waitpid ==========
+========== START test_write ==========
+Hello operating system contest.
+========== END test_write ==========
+========== START test_yield ==========
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+  I am child process: 42. iteration 0.
+  I am child process: 43. iteration 1.
+  I am child process: 44. iteration 2.
+========== END test_yield ==========
+#### OS COMP TEST GROUP END basic-musl ####
+#### OS COMP TEST GROUP END basic-glibc ####
+#### OS COMP TEST GROUP START libctest-glibc ###

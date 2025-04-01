@@ -85,7 +85,6 @@ impl TaskExt {
         _ctid: usize,
     ) -> AxResult<u64> {
         let _clone_flags = CloneFlags::from_bits((flags & !0x3f) as u32).unwrap();
-
         let mut new_task = TaskInner::new(
             || {
                 let curr = axtask::current();
@@ -101,7 +100,9 @@ impl TaskExt {
             current().id_name(),
             axconfig::plat::KERNEL_STACK_SIZE,
         );
-
+        #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
+        new_task.ctx_mut().set_tls(axhal::arch::read_thread_pointer().into());
+        
         let current_task = current();
         let mut current_aspace = current_task.task_ext().aspace.lock();
         let mut new_aspace = current_aspace.clone_or_err()?;
@@ -290,7 +291,7 @@ pub fn wait_pid(pid: i32, exit_code_ptr: *mut i32) -> Result<u64, WaitStatus> {
     let mut exit_task_id: usize = 0;
     let mut answer_id: u64 = 0;
     let mut answer_status = WaitStatus::NotExist;
-
+    
     for (index, child) in curr_task.task_ext().children.lock().iter().enumerate() {
         if pid <= 0 {
             if pid == 0 {
@@ -316,6 +317,7 @@ pub fn wait_pid(pid: i32, exit_code_ptr: *mut i32) -> Result<u64, WaitStatus> {
                 break;
             }
         } else if child.id().as_u64() == pid as u64 {
+            
             if let Some(exit_code) = child.join() {
                 answer_status = WaitStatus::Exited;
                 info!(

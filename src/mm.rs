@@ -9,7 +9,6 @@ use axhal::{
 };
 
 use axmm::AddrSpace;
-use axstd::println;
 use axtask::TaskExtRef;
 use kernel_elf_parser::{AuxvEntry, ELFParser, app_stack_region};
 use memory_addr::{MemoryAddr, PAGE_SIZE_4K, VirtAddr};
