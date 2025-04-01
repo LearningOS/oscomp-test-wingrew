@@ -86,7 +86,7 @@ fn main() {
             println!("#### OS COMP TEST GROUP END basic-glibc ####");
             println!("#### OS COMP TEST GROUP START libctest-glibc ####");
             println!("#### OS COMP TEST GROUP START libctest-musl ####");
-        }else if i == 97{
+        }else if i == 162{
             println!("#### OS COMP TEST GROUP END libctest-musl ####");
             println!("#### OS COMP TEST GROUP END libctest-glibc ####");
         }
