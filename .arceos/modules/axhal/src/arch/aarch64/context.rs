@@ -107,6 +107,8 @@ impl UspaceContext {
         self.0.r[0] = r0 as _;
     }
 
+    
+
     /// Enters user space.
     ///
     /// It restores the user registers and jumps to the user entry point
@@ -231,6 +233,10 @@ impl TaskContext {
         self.sp = kstack_top.as_usize() as u64;
         self.lr = entry as u64;
         // When under `uspace` feature, kernel will not use this register.
+        self.tpidr_el0 = tls_area.as_usize() as u64;
+    }
+
+    pub fn set_tls(&mut self, tls_area: VirtAddr) {
         self.tpidr_el0 = tls_area.as_usize() as u64;
     }
 
