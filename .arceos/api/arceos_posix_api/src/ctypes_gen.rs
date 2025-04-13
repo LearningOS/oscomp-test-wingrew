@@ -1425,9 +1425,9 @@ pub struct stat {
     pub st_size: off_t,
     pub st_blksize: blksize_t,
     pub st_blocks: blkcnt_t,
-    pub st_atime: [isize;2],
-    pub st_mtime: [isize;2],
-    pub st_ctime: [isize;2],
+    pub st_atime: timespec,
+    pub st_mtime: timespec,
+    pub st_ctime: timespec,
 }
 #[test]
 fn bindgen_test_layout_stat() {

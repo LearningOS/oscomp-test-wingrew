@@ -8,6 +8,7 @@ use axio::{Error, PollState, SeekFrom};
 use axsync::Mutex;
 use axerrno::AxError;
 use super::fd_ops::{FileLike, get_file_like};
+use crate::ctypes::timespec;
 use crate::AT_FDCWD;
 use crate::{ctypes, utils::char_ptr_to_str};
 
@@ -62,6 +63,7 @@ impl FileLike for File {
         let ty = metadata.file_type() as u8;
         let perm = metadata.perm().bits() as u32;
         let st_mode = ((ty as u32) << 12) | perm;
+        
         Ok(ctypes::stat {
             st_ino: 1,
             st_nlink: 1,
@@ -71,9 +73,18 @@ impl FileLike for File {
             st_size: metadata.size() as _,
             st_blocks: metadata.blocks() as _,
             st_blksize: 512,
-            st_atime:node.st_atime,
-            st_mtime:node.st_mtime,
-            st_ctime:node.st_ctime,
+            st_atime:{timespec{
+                tv_sec: node.st_atime[0] as i64,
+                tv_nsec: node.st_atime[1] as i64,
+            }},
+            st_mtime:{timespec{
+                tv_sec: node.st_mtime[0] as i64,
+                tv_nsec: node.st_mtime[1] as i64,
+            }},
+            st_ctime:{timespec{
+                tv_sec: node.st_ctime[0] as i64,
+                tv_nsec: node.st_ctime[1] as i64,
+            }},
             ..Default::default()
         })
     }

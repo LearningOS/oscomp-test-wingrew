@@ -96,12 +96,12 @@ impl From<arceos_posix_api::ctypes::stat> for Kstat {
             st_blksize: stat.st_blksize as u32,
             _pad1: 0,
             st_blocks: stat.st_blocks as u64,
-            st_atime_sec: stat.st_atime[0] as isize,
-            st_atime_nsec: stat.st_atime[0] as isize,
-            st_mtime_sec: stat.st_mtime[0] as isize,
-            st_mtime_nsec: stat.st_mtime[0] as isize,
-            st_ctime_sec: stat.st_ctime[0] as isize,
-            st_ctime_nsec: stat.st_ctime[0] as isize,
+            st_atime_sec: stat.st_atime.tv_sec as isize,
+            st_atime_nsec: stat.st_atime.tv_nsec as isize,
+            st_mtime_sec: stat.st_mtime.tv_sec as isize,
+            st_mtime_nsec: stat.st_mtime.tv_nsec as isize,
+            st_ctime_sec: stat.st_ctime.tv_sec as isize,
+            st_ctime_nsec: stat.st_ctime.tv_nsec as isize,
         }
     }
 }
@@ -273,12 +273,12 @@ pub fn sys_statx(
     statx.stx_size = status.st_size as u64;
     statx.stx_blocks = status.st_blocks as u64;
     statx.stx_attributes_mask = 0x7FF;
-    statx.stx_atime.tv_sec = status.st_atime[0] as i64;
-    statx.stx_atime.tv_nsec = status.st_atime[1] as u32;
-    statx.stx_ctime.tv_sec = status.st_ctime[0] as i64;
-    statx.stx_ctime.tv_nsec = status.st_ctime[1] as u32;
-    statx.stx_mtime.tv_sec = status.st_mtime[0] as i64;
-    statx.stx_mtime.tv_nsec = status.st_mtime[1] as u32;
+    statx.stx_atime.tv_sec = status.st_atime.tv_sec as i64;
+    statx.stx_atime.tv_nsec = status.st_atime.tv_nsec as u32;
+    statx.stx_ctime.tv_sec = status.st_ctime.tv_sec as i64;
+    statx.stx_ctime.tv_nsec = status.st_ctime.tv_nsec as u32;
+    statx.stx_mtime.tv_sec = status.st_mtime.tv_sec as i64;
+    statx.stx_mtime.tv_nsec = status.st_mtime.tv_nsec as u32;
     Ok(0)
 }
 
