@@ -65,7 +65,6 @@ pub unsafe fn sys_nanosleep(req: *const ctypes::timespec, rem: *mut ctypes::time
                 return Err(LinuxError::EINVAL);
             }
         }
-
         let dur = unsafe {
             debug!("sys_nanosleep <= {}.{:09}s", (*req).tv_sec, (*req).tv_nsec);
             Duration::from(*req)

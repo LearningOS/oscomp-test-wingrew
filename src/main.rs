@@ -22,7 +22,9 @@ use axerrno::AxResult;
 use axhal::arch::UspaceContext;
 use axmm::{AddrSpace, kernel_aspace};
 use axsync::Mutex;
+use hashbrown::HashMap;
 use memory_addr::VirtAddr;
+use task::TASK_ALL;
 
 fn new_user_aspace_empty() -> AxResult<AddrSpace> {
     AddrSpace::new_empty(
@@ -66,6 +68,7 @@ fn run_user_app(args: &[String], envs: &[String]) -> Option<i32> {
 
 #[unsafe(no_mangle)]
 fn main() {
+    TASK_ALL.init_once(Mutex::new(HashMap::new()));
     println!("#### OS COMP TEST GROUP START basic-glibc ####");
     println!("#### OS COMP TEST GROUP START basic-musl ####");
     let testcases = option_env!("AX_TESTCASES_LIST")
@@ -86,7 +89,7 @@ fn main() {
             println!("#### OS COMP TEST GROUP END basic-glibc ####");
             println!("#### OS COMP TEST GROUP START libctest-glibc ####");
             println!("#### OS COMP TEST GROUP START libctest-musl ####");
-        }else if i == 162{
+        }else if i == 207{
             println!("#### OS COMP TEST GROUP END libctest-musl ####");
             println!("#### OS COMP TEST GROUP END libctest-glibc ####");
         }

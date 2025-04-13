@@ -25,6 +25,9 @@ pub struct File {
     node: WithCap<VfsNodeRef>,
     is_append: bool,
     offset: u64,
+    pub st_atime: [isize;2],
+    pub st_mtime: [isize;2],
+    pub st_ctime: [isize;2],
 }
 
 /// An opened directory object, with open permissions and a cursor for
@@ -193,6 +196,9 @@ impl File {
             node: WithCap::new(node, access_cap),
             is_append: opts.append,
             offset: 0,
+            st_atime: [0, 0],
+            st_mtime: [0, 0],
+            st_ctime: [0, 0],
         })
     }
 
@@ -278,6 +284,16 @@ impl File {
     /// Gets the file attributes.
     pub fn get_attr(&self) -> AxResult<FileAttr> {
         self.access_node(Cap::empty())?.get_attr()
+    }
+
+    pub fn set_time(&mut self, atime:[isize;2], mtime:[isize;2]){
+        info!("atime:{:?}, mtime:{:?}", atime, mtime);
+        if atime[1] != -1{
+            self.st_atime = atime;
+        }
+        if mtime[1] != -1{
+            self.st_mtime = mtime;
+        }
     }
 }
 
@@ -381,6 +397,11 @@ impl Directory {
     /// This only works then the new path is in the same mounted fs.
     pub fn rename(&self, old: &str, new: &str) -> AxResult {
         crate::root::rename(old, new)
+    }
+
+        /// Gets the file attributes.
+    pub fn get_attr(&self) -> AxResult<FileAttr> {
+        self.access_node(Cap::empty())?.get_attr()
     }
 }
 

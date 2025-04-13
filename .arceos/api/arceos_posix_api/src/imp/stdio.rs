@@ -65,6 +65,7 @@ impl Stdin {
             if read_len > 0 {
                 return Ok(read_len);
             }
+            
             crate::sys_sched_yield();
         }
     }

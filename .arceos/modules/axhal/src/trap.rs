@@ -17,6 +17,8 @@ pub static IRQ: [fn(usize) -> bool];
 #[def_trap_handler]
 pub static PAGE_FAULT: [fn(VirtAddr, MappingFlags, bool) -> bool];
 
+#[def_trap_handler]
+pub static DEAL_SIGNAL: [fn()];
 /// A slice of syscall handler functions.
 #[cfg(feature = "uspace")]
 #[def_trap_handler]
@@ -42,4 +44,8 @@ macro_rules! handle_trap {
 #[cfg(feature = "uspace")]
 pub(crate) fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
     SYSCALL[0](tf, syscall_num)
+}
+
+pub fn dealwith_signal(){
+    DEAL_SIGNAL[0]();
 }

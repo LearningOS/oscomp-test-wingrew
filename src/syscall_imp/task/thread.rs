@@ -1,13 +1,13 @@
 use core::{ffi::c_char, ptr};
 
 use alloc::vec::Vec;
+use arceos_posix_api::{query_futex, add_futex, remove_futex};
 use axerrno::{LinuxError, LinuxResult};
 use axtask::{TaskExtRef, current, yield_now};
 use macro_rules_attribute::apply;
 use num_enum::TryFromPrimitive;
-
 use crate::{
-    ctypes::{WaitFlags, WaitStatus},
+    ctypes::{FluxStatus, WaitFlags, WaitStatus},
     ptr::{PtrWrapper, UserConstPtr, UserPtr},
     syscall_imp::syscall_instrument,
     task::wait_pid,
@@ -34,6 +34,8 @@ enum ArchPrctlCode {
     SetCpuid = 0x1012,
 }
 
+
+
 #[apply(syscall_instrument)]
 pub fn sys_getpid() -> LinuxResult<isize> {
     Ok(axtask::current().task_ext().proc_id as _)
@@ -41,8 +43,7 @@ pub fn sys_getpid() -> LinuxResult<isize> {
 
 #[apply(syscall_instrument)]
 pub fn sys_gettid() -> LinuxResult<isize> {
-    Ok(axtask::current().task_ext().proc_id as _)
-    // 待完善
+    Ok(axtask::current().id().get_id() as isize)
 }
 
 #[apply(syscall_instrument)]
@@ -85,6 +86,7 @@ pub fn sys_exit_group(status: i32) -> ! {
 /// The set_tid_address() always succeeds
 #[apply(syscall_instrument)]
 pub fn sys_set_tid_address(tid_ptd: UserConstPtr<i32>) -> LinuxResult<isize> {
+    info!("sys_set_tid_address: tid_ptd: {:#x}", tid_ptd.address().as_usize());
     let curr = current();
     curr.task_ext()
         .set_clear_child_tid(tid_ptd.address().as_ptr() as _);
@@ -172,6 +174,7 @@ pub fn sys_wait4(pid: i32, exit_code_ptr: UserPtr<i32>, option: u32) -> LinuxRes
                     if option_flag.contains(WaitFlags::WNOHANG) {
                         return Ok(0);
                     } else {
+
                         yield_now();
                     }
                 }
@@ -221,4 +224,46 @@ pub fn sys_execve(
     }
 
     unreachable!("execve should never return");
+}
+
+pub fn sys_futex( 
+    futex: UserPtr<i32>,
+    _op: i32,
+    _val: i32,
+    timeout: UserPtr<usize>,
+    newval: UserPtr<i32>,
+    _val3: i32,
+) -> LinuxResult<isize> {
+    let futex = futex.nullable(UserPtr::get)?;
+    let _timeout = timeout.nullable(UserPtr::get)?;
+    let _newval = newval.nullable(UserPtr::get)?;
+    let flux_status = FluxStatus::try_from(_op).unwrap();
+    info!("flux_status:{:?}, futex:{:?}, _op:{:?}, _val:{:?}", flux_status, futex, _op, _val);
+    match flux_status {
+        FluxStatus::WaitPrivate => {
+            unsafe {
+                info!("real_futex:{}", *futex.unwrap());
+                if *(futex.unwrap()) == _val{
+                    add_futex(futex.unwrap() as usize, sys_gettid().unwrap() as usize);
+                    // WaitPrivate
+                    loop{
+                        if query_futex(futex.unwrap() as usize, sys_gettid().unwrap() as usize){
+                            yield_now();
+                        }else{
+                            return Ok(0);
+                        }
+                    }
+                }else{
+                    return Ok(0);
+                }
+            }
+        }
+        FluxStatus::WakePrivate => {
+            // WakePrivate
+            return Ok(remove_futex(_val as usize) as isize);
+        }
+        _ => {
+            return Err(LinuxError::ENOSYS);
+        }
+    }
 }

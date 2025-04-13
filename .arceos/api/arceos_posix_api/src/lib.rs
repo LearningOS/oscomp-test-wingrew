@@ -38,7 +38,7 @@ pub use imp::resources::{sys_getrlimit, sys_setrlimit};
 pub use imp::sys::sys_sysconf;
 pub use imp::task::{sys_exit, sys_getpid, sys_sched_yield};
 pub use imp::time::{sys_clock_gettime, sys_get_time_of_day, sys_nanosleep};
-
+pub use imp::pthread::{query_futex, add_futex, remove_futex};
 #[cfg(feature = "fd")]
 pub use imp::fd_ops::{
     FD_TABLE, add_file_like, get_file_like, sys_close, sys_dup, sys_dup2, sys_fcntl,
@@ -46,7 +46,7 @@ pub use imp::fd_ops::{
 #[cfg(feature = "fs")]
 pub use imp::fs::{
     Directory, File, sys_fstat, sys_getcwd, sys_lseek, sys_lstat, sys_open, sys_openat, sys_rename,
-    sys_stat,
+    sys_stat,sys_utime,open_file
 };
 #[cfg(feature = "select")]
 pub use imp::io_mpx::sys_select;

@@ -1,5 +1,5 @@
 use alloc::{boxed::Box, string::String, sync::Arc};
-use core::ops::Deref;
+use core::ops::{Deref, Mul};
 use core::sync::atomic::{AtomicBool, AtomicI32, AtomicU8, AtomicU64, Ordering};
 use core::{alloc::Layout, cell::UnsafeCell, fmt, ptr::NonNull};
 
@@ -15,11 +15,15 @@ use axhal::tls::TlsArea;
 
 use crate::task_ext::AxTaskExt;
 use crate::{AxCpuMask, AxTask, AxTaskRef, WaitQueue};
-
 /// A unique identifier for a thread.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TaskId(u64);
-
+impl TaskId {
+    // 公开方法获取内部值
+    pub fn get_id(&self) -> u64 {
+        self.0
+    }
+}
 /// The possible states of a task.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

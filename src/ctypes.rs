@@ -1,7 +1,8 @@
 //! clone 任务时指定的参数。
 
+pub const UTIME_NOW:usize = 0x3fffffff; 
+pub const UTIME_OMIT:usize = 0x3FFFFFFE; 
 use bitflags::*;
-
 bitflags! {
     /// 用于 sys_clone 的选项
     #[derive(Debug, Clone, Copy)]
@@ -61,6 +62,148 @@ bitflags! {
 
 }
 
+
+
+// 定义 sigset_t（1024 位 = 128 字节）
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct SigsetT {
+    bits: [u64; 16], // 16 个 u64，每个 64 位，总计 1024 位
+}
+
+
+// 定义 struct sigaction
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct SigAction {
+    pub sa_handler: usize,                    // void (*)(int)
+    pub sa_flags: usize,                        // int
+    pub sa_restorer: usize,
+    pub sa_mask: usize,                       // sigset_t
+}
+
+impl Default for SigAction {
+    fn default() -> Self {
+        Self {
+            sa_handler: 0,
+            sa_flags: 0,
+            sa_restorer: 0,
+            sa_mask: 0,
+        }
+    }
+}
+
+// siginfo_t 的简化定义（根据需要扩展）
+#[repr(C)]
+pub struct SiginfoT {
+    si_signo: i32,
+    si_errno: i32,
+    si_code: i32,
+    // 其他字段根据具体需求添加，例如 si_pid, si_uid 等
+}
+
+pub const VAILD_SIGNAL: usize = 64;
+
+bitflags! {
+    #[derive(Clone, Debug, Copy, PartialEq, Eq)]
+    pub struct SignalFlags: u64 {
+        const	SIGHUP		= 1 << 0;
+        /// Interactive attention signal.
+        const	SIGINT		= 1 << 1;
+        /// Quit.
+        const	SIGQUIT		= 1 << 2;
+        /// Illegal instruction.
+        const	SIGILL		= 1 << 3;
+        /// Trace/breakpoint trap.
+        const	SIGTRAP		= 1 << 4;
+        /// IOT instruction, abort() on a PDP-11.
+        const	SIGABRT		= 1 << 5;
+        /// Bus error.
+        const	SIGBUS		= 1 << 6;
+        /// Erroneous arithmetic operation.
+        const	SIGFPE		= 1 << 7;
+        /// Killed.
+        const	SIGKILL		= 1 << 8;
+        /// User-defined signal 1.
+        const	SIGUSR1		= 1 << 9;
+        /// Invalid access to storage.
+        const	SIGSEGV		= 1 << 10;
+        /// User-defined signal 2.
+        const	SIGUSR2		= 1 << 11;
+        /// Broken pipe.
+        const	SIGPIPE		= 1 << 12;
+        /// Alarm clock.
+        const	SIGALRM		= 1 << 13;
+        /// Termination request.
+        const	SIGTERM		= 1 << 14;
+        const	SIGSTKFLT	= 1 << 15;
+        /// Child terminated or stopped.
+        const	SIGCHLD		= 1 << 16;
+        /// Continue.
+        const	SIGCONT		= 1 << 17;
+        /// Stop, unblockable.
+        const	SIGSTOP		= 1 << 18;
+        /// Keyboard stop.
+        const	SIGTSTP		= 1 << 19;
+        /// Background read from control terminal.
+        const	SIGTTIN		= 1 << 20;
+        /// Background write to control terminal.
+        const	SIGTTOU		= 1 << 21;
+        /// Urgent data is available at a socket.
+        const	SIGURG		= 1 << 22;
+        /// CPU time limit exceeded.
+        const	SIGXCPU		= 1 << 23;
+        /// File size limit exceeded.
+        const	SIGXFSZ		= 1 << 24;
+        /// Virtual timer expired.
+        const	SIGVTALRM	= 1 << 25;
+        /// Profiling timer expired.
+        const	SIGPROF		= 1 << 26;
+        /// Window size change (4.3 BSD, Sun).
+        const	SIGWINCH	= 1 << 27;
+        /// I/O now possible (4.2 BSD).
+        const	SIGIO		= 1 << 28;
+        const   SIGPWR      = 1 << 29;
+        /// Bad system call.
+        const   SIGSYS      = 1 << 30;
+        /* --- realtime signals for pthread --- */
+        const   SIGTIMER    = 1 << 31;
+        const   SIGCANCEL   = 1 << 32;
+        const   SIGSYNCCALL = 1 << 33;
+        /* --- other realtime signals --- */
+        const   SIGRT_3     = 1 << 34;
+        const   SIGRT_4     = 1 << 35;
+        const   SIGRT_5     = 1 << 36;
+        const   SIGRT_6     = 1 << 37;
+        const   SIGRT_7     = 1 << 38;
+        const   SIGRT_8     = 1 << 39;
+        const   SIGRT_9     = 1 << 40;
+        const   SIGRT_10    = 1 << 41;
+        const   SIGRT_11    = 1 << 42;
+        const   SIGRT_12    = 1 << 43;
+        const   SIGRT_13    = 1 << 44;
+        const   SIGRT_14    = 1 << 45;
+        const   SIGRT_15    = 1 << 46;
+        const   SIGRT_16    = 1 << 47;
+        const   SIGRT_17    = 1 << 48;
+        const   SIGRT_18    = 1 << 49;
+        const   SIGRT_19    = 1 << 50;
+        const   SIGRT_20    = 1 << 51;
+        const   SIGRT_21    = 1 << 52;
+        const   SIGRT_22    = 1 << 53;
+        const   SIGRT_23    = 1 << 54;
+        const   SIGRT_24    = 1 << 55;
+        const   SIGRT_25    = 1 << 56;
+        const   SIGRT_26    = 1 << 57;
+        const   SIGRT_27    = 1 << 58;
+        const   SIGRT_28    = 1 << 59;
+        const   SIGRT_29    = 1 << 60;
+        const   SIGRT_30    = 1 << 61;
+        const   SIGRT_31    = 1 << 62;
+        const   SIGRTMAX    = 1 << 63;
+    }
+}
+
 /// sys_wait4 的返回值
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WaitStatus {
@@ -71,6 +214,68 @@ pub enum WaitStatus {
     /// 找不到对应的子任务
     NotExist,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SignalSet {
+    SigBlock,
+    SigUnblock,
+    SigSetmask,
+}
+
+impl TryFrom<i32> for SignalSet {
+    type Error = &'static str;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(SignalSet::SigBlock),
+            1 => Ok(SignalSet::SigUnblock),
+            2 => Ok(SignalSet::SigSetmask),
+            _ => Err("Invalid signal set value"),
+        }
+    }
+}
+
+#[repr(i32)]
+#[derive(Debug)]
+pub enum FluxStatus {
+    Wait,           // 0: FUTEX_WAIT
+    Wake,           // 1: FUTEX_WAKE
+    Requeue,        // 3: FUTEX_REQUEUE
+    CmpRequeue,     // 4: FUTEX_CMP_REQUEUE
+    WakeOp,         // 5: FUTEX_WAKE_OP
+    LockPi,         // 6: FUTEX_LOCK_PI
+    UnlockPi,       // 7: FUTEX_UNLOCK_PI
+    WaitBitset,     // 9: FUTEX_WAIT_BITSET
+    WakeBitset,     // 10: FUTEX_WAKE_BITSET
+    WaitPrivate = 128,    // 128: FUTEX_WAIT_PRIVATE
+    WakePrivate = 129,    // 129: FUTEX_WAKE_PRIVATE
+    NONE = -1,
+}
+
+// 实现 TryFrom<i32> 以支持 i32 到 FluxStatus 的转换
+impl TryFrom<i32> for FluxStatus {
+    type Error = &'static str;
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(FluxStatus::Wait),
+            1 => Ok(FluxStatus::Wake),
+            3 => Ok(FluxStatus::Requeue),
+            4 => Ok(FluxStatus::CmpRequeue),
+            5 => Ok(FluxStatus::WakeOp),
+            6 => Ok(FluxStatus::LockPi),
+            7 => Ok(FluxStatus::UnlockPi),
+            9 => Ok(FluxStatus::WaitBitset),
+            10 => Ok(FluxStatus::WakeBitset),
+            128 => Ok(FluxStatus::WaitPrivate),
+            129 => Ok(FluxStatus::WakePrivate),
+            -1 => Ok(FluxStatus::NONE),
+            _ => Err("Invalid value for FluxStatus"),
+        }
+    }
+}
+
+
+
 #[repr(C)]
 pub struct Tms {
     /// 进程用户态执行时间，单位为us

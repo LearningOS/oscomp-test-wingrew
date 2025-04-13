@@ -68,4 +68,5 @@ fn riscv_trap_handler(tf: &mut TrapFrame, from_user: bool) {
             tf
         );
     }
+    // crate::trap::dealwith_signal();
 }

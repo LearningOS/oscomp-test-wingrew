@@ -120,4 +120,5 @@ fn handle_sync_exception(tf: &mut TrapFrame) {
             );
         }
     }
+    // crate::trap::dealwith_signal();
 }

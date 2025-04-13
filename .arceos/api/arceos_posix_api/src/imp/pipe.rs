@@ -18,6 +18,7 @@ enum RingBufferStatus {
 const RING_BUFFER_SIZE: usize = 256;
 
 pub struct PipeRingBuffer {
+    wait_writer: isize,
     arr: [u8; RING_BUFFER_SIZE],
     head: usize,
     tail: usize,
@@ -27,6 +28,7 @@ pub struct PipeRingBuffer {
 impl PipeRingBuffer {
     pub const fn new() -> Self {
         Self {
+            wait_writer: 0,
             arr: [0; RING_BUFFER_SIZE],
             head: 0,
             tail: 0,
@@ -72,11 +74,20 @@ impl PipeRingBuffer {
             RING_BUFFER_SIZE - self.available_read()
         }
     }
+
+    pub fn get_waiter(&self) -> isize {
+        self.wait_writer
+    }
+
+    pub fn set_waiter(&mut self, waiter: isize) {
+        self.wait_writer += waiter;
+    }
 }
 
 pub struct Pipe {
     readable: bool,
     buffer: Arc<Mutex<PipeRingBuffer>>,
+    
 }
 
 impl Pipe {
@@ -117,7 +128,7 @@ impl FileLike for Pipe {
             let mut ring_buffer = self.buffer.lock();
             let loop_read = ring_buffer.available_read();
             if loop_read == 0 {
-                if self.write_end_close() {
+                if ring_buffer.get_waiter() == 0 || self.write_end_close() {
                     return Ok(read_size);
                 }
                 drop(ring_buffer);
@@ -145,13 +156,18 @@ impl FileLike for Pipe {
             let mut ring_buffer = self.buffer.lock();
             let loop_write = ring_buffer.available_write();
             if loop_write == 0 {
+                ring_buffer.set_waiter(1);      // 单核场景
                 drop(ring_buffer);
                 // Buffer is full, wait for read end to consume
                 crate::sys_sched_yield(); // TODO: use synconize primitive
+                let mut ring_buffer = self.buffer.lock();
+                ring_buffer.set_waiter(-1);
+                drop(ring_buffer);
                 continue;
             }
             for _ in 0..loop_write {
                 if write_size == max_len {
+                    drop(ring_buffer);
                     return Ok(write_size);
                 }
                 ring_buffer.write_byte(buf[write_size]);
@@ -205,7 +221,6 @@ pub fn sys_pipe(fds: &mut [c_int]) -> c_int {
         let write_fd = add_file_like(Arc::new(write_end)).inspect_err(|_| {
             close_file_like(read_fd).ok();
         })?;
-
         fds[0] = read_fd as c_int;
         fds[1] = write_fd as c_int;
 

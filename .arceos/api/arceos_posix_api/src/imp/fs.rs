@@ -4,9 +4,9 @@ use core::ffi::{c_char, c_int};
 
 use axerrno::{LinuxError, LinuxResult};
 use axfs::fops::OpenOptions;
-use axio::{PollState, SeekFrom};
+use axio::{Error, PollState, SeekFrom};
 use axsync::Mutex;
-
+use axerrno::AxError;
 use super::fd_ops::{FileLike, get_file_like};
 use crate::AT_FDCWD;
 use crate::{ctypes, utils::char_ptr_to_str};
@@ -29,13 +29,13 @@ impl File {
         super::fd_ops::add_file_like(Arc::new(self))
     }
 
-    fn from_fd(fd: c_int) -> LinuxResult<Arc<Self>> {
+    pub fn from_fd(fd: c_int) -> LinuxResult<Arc<Self>> {
         let f = super::fd_ops::get_file_like(fd)?;
         f.into_any()
             .downcast::<Self>()
             .map_err(|_| LinuxError::EINVAL)
     }
-
+    
     /// Get the path of the file.
     pub fn path(&self) -> &str {
         &self.path
@@ -57,7 +57,8 @@ impl FileLike for File {
     }
 
     fn stat(&self) -> LinuxResult<ctypes::stat> {
-        let metadata = self.inner.lock().get_attr()?;
+        let node = self.inner.lock();
+        let metadata = node.get_attr()?;
         let ty = metadata.file_type() as u8;
         let perm = metadata.perm().bits() as u32;
         let st_mode = ((ty as u32) << 12) | perm;
@@ -70,6 +71,9 @@ impl FileLike for File {
             st_size: metadata.size() as _,
             st_blocks: metadata.blocks() as _,
             st_blksize: 512,
+            st_atime:node.st_atime,
+            st_mtime:node.st_mtime,
+            st_ctime:node.st_ctime,
             ..Default::default()
         })
     }
@@ -77,6 +81,7 @@ impl FileLike for File {
     fn into_any(self: Arc<Self>) -> Arc<dyn core::any::Any + Send + Sync> {
         self
     }
+    
 
     fn poll(&self) -> LinuxResult<PollState> {
         Ok(PollState {
@@ -180,6 +185,31 @@ pub fn sys_openat(
     }
 }
 
+pub fn open_file(dirfd: isize, filename: &str) -> LinuxResult<File>{
+    let mut opt = OpenOptions::new();
+    opt.read(true);
+    if filename.starts_with('/') || dirfd == AT_FDCWD as _ {
+        if let Ok(file) = axfs::fops::File::open(filename, &opt){
+            return Ok(File::new(file, filename.to_string()));
+        }else{
+            return Err(LinuxError::EBADE);
+        }
+    }else{
+        if let Ok(dir) = Directory::from_fd(dirfd as c_int){
+            if let Ok(file) = dir.inner.lock().open_file_at(filename, &opt){
+                return Ok(File::new(file, filename.to_string()));
+            }else{
+                return Err(LinuxError::EBADE);
+            }
+        }else{
+            return Err(LinuxError::EBADE);
+        }
+    }
+}
+
+pub fn sys_utime(file:Arc<File>, atime:[isize;2], mtime:[isize;2]){
+    file.inner.lock().set_time(atime, mtime);
+}
 /// Use the function to open file or directory, then add into file descriptor table.
 /// First try opening files, if fails, try directory.
 fn add_file_or_directory_fd<F, D, E>(
@@ -231,7 +261,9 @@ pub fn sys_lseek(fd: c_int, offset: ctypes::off_t, whence: c_int) -> ctypes::off
 ///
 /// Return 0 if success.
 pub unsafe fn sys_stat(path: *const c_char, buf: *mut ctypes::stat) -> c_int {
+    
     let path = char_ptr_to_str(path);
+    info!("fstatat path: {:?}", path);
     debug!("sys_stat <= {:?} {:#x}", path, buf as usize);
     syscall_body!(sys_stat, {
         if buf.is_null() {
@@ -239,9 +271,26 @@ pub unsafe fn sys_stat(path: *const c_char, buf: *mut ctypes::stat) -> c_int {
         }
         let mut options = OpenOptions::new();
         options.read(true);
-        let file = axfs::fops::File::open(path?, &options)?;
-        let st = File::new(file, path?.to_string()).stat()?;
-        unsafe { *buf = st };
+        
+        let file = axfs::fops::File::open(path?, &options);
+        match file {
+            Ok(file) => {
+                let st = File::new(file, path?.to_string()).stat()?;
+                unsafe { *buf = st };
+            }
+            Err(e) => {
+                if AxError::from(e) == AxError::IsADirectory {
+                    let dir = axfs::fops::Directory::open_dir(path?, &options)?;
+                    let st = Directory::new(dir, path?.to_string()).stat()?;
+
+                    unsafe { *buf = st };
+                } else {
+                    return Err(e.into());
+                }
+            }
+        }
+        // match 
+
         Ok(0)
     })
 }
@@ -352,7 +401,21 @@ impl FileLike for Directory {
     }
 
     fn stat(&self) -> LinuxResult<ctypes::stat> {
-        Err(LinuxError::EBADF)
+        let metadata = self.inner.lock().get_attr()?;
+        let ty = metadata.file_type() as u8;
+        let perm = metadata.perm().bits() as u32;
+        let st_mode = ((ty as u32) << 12) | perm;
+        Ok(ctypes::stat {
+            st_ino: 1,
+            st_nlink: 1,
+            st_mode,
+            st_uid: 1000,
+            st_gid: 1000,
+            st_size: metadata.size() as _,
+            st_blocks: metadata.blocks() as _,
+            st_blksize: 512,
+            ..Default::default()
+        })
     }
 
     fn into_any(self: Arc<Self>) -> Arc<dyn core::any::Any + Send + Sync> {

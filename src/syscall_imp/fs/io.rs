@@ -43,3 +43,7 @@ pub(crate) fn sys_open(
     use arceos_posix_api::AT_FDCWD;
     sys_openat(AT_FDCWD as _, path, flags, modes)
 }
+
+pub(crate) fn sys_lseek(fd: i32, offset: i64, whence: i32) -> LinuxResult<isize> {
+    Ok(api::sys_lseek(fd, offset, whence) as _)
+}

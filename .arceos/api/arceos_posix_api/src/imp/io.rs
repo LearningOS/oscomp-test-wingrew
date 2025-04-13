@@ -17,9 +17,12 @@ pub fn sys_read(fd: c_int, buf: *mut c_void, count: usize) -> ctypes::ssize_t {
             return Err(LinuxError::EFAULT);
         }
         let dst = unsafe { core::slice::from_raw_parts_mut(buf as *mut u8, count) };
+
         #[cfg(feature = "fd")]
-        {
-            Ok(get_file_like(fd)?.read(dst)? as ctypes::ssize_t)
+        {   
+            let file = get_file_like(fd)?;
+            let result = file.read(dst)?;
+            Ok(result as ctypes::ssize_t)
         }
         #[cfg(not(feature = "fd"))]
         match fd {
@@ -57,15 +60,18 @@ pub fn sys_write(fd: c_int, buf: *const c_void, count: usize) -> ctypes::ssize_t
 
 /// Write a vector.
 pub unsafe fn sys_writev(fd: c_int, iov: *const ctypes::iovec, iocnt: c_int) -> ctypes::ssize_t {
-    debug!("sys_writev <= fd: {}", fd);
+    debug!("sys_writev <= fd: {} {:?} {}", fd, iov, iocnt);
     syscall_body!(sys_writev, {
         if !(0..=1024).contains(&iocnt) {
             return Err(LinuxError::EINVAL);
         }
-
         let iovs = unsafe { core::slice::from_raw_parts(iov, iocnt as usize) };
         let mut ret = 0;
+        info!("sys_writev <= fd: {} iovs: {:?}", fd, iovs);
         for iov in iovs.iter() {
+            if iov.iov_len == 0 {
+                continue;
+            }
             let result = write_impl(fd, iov.iov_base, iov.iov_len)?;
             ret += result;
 
@@ -73,7 +79,6 @@ pub unsafe fn sys_writev(fd: c_int, iov: *const ctypes::iovec, iocnt: c_int) -> 
                 break;
             }
         }
-
         Ok(ret)
     })
 }

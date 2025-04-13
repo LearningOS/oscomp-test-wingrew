@@ -4,12 +4,10 @@ use core::mem::MaybeUninit;
 
 #[cfg(feature = "smp")]
 use alloc::sync::Weak;
-
 use kernel_guard::BaseGuard;
 use kspin::SpinRaw;
 use lazyinit::LazyInit;
 use scheduler::BaseScheduler;
-
 use axhal::cpu::this_cpu_id;
 
 use crate::task::{CurrentTask, TaskState};
@@ -38,6 +36,8 @@ percpu_static! {
     #[cfg(feature = "smp")]
     PREV_TASK: Weak<crate::AxTask> = Weak::new(),
 }
+
+
 
 /// An array of references to run queues, one for each CPU, indexed by cpu_id.
 ///

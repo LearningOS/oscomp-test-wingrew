@@ -1,7 +1,5 @@
 use alloc::{
-    string::{String, ToString},
-    sync::Arc,
-    vec::Vec,
+    string::{String, ToString}, sync::Arc, vec::Vec
 };
 use arceos_posix_api::FD_TABLE;
 use axerrno::{AxError, AxResult};
@@ -13,10 +11,11 @@ use core::{
 };
 use memory_addr::VirtAddrRange;
 use spin::Once;
-
+use hashbrown::HashMap;
+use lazyinit::LazyInit;
 use crate::{
     copy_from_kernel,
-    ctypes::{CloneFlags, TimeStat, WaitStatus},
+    ctypes::{CloneFlags, SigAction, SignalFlags, TimeStat, WaitStatus, VAILD_SIGNAL},
 };
 use axhal::{
     arch::{TrapFrame, UspaceContext},
@@ -25,7 +24,9 @@ use axhal::{
 use axmm::{AddrSpace, kernel_aspace};
 use axns::{AxNamespace, AxNamespaceIf};
 use axsync::Mutex;
-use axtask::{AxTaskRef, TaskExtRef, TaskInner, current};
+use axtask::{current, AxTaskRef, TaskExtRef, TaskInner, WeakAxTaskRef};
+  
+
 
 /// Task extended data for the monolithic kernel.
 pub struct TaskExt {
@@ -53,6 +54,10 @@ pub struct TaskExt {
     pub heap_bottom: AtomicU64,
     /// The user heap top
     pub heap_top: AtomicU64,
+    pub signal_mask: Mutex<SignalFlags>,
+    pub sigaction: Mutex<[SigAction; VAILD_SIGNAL]>,
+    pub killed: bool,
+    pub frozen: bool,
 }
 
 impl TaskExt {
@@ -73,6 +78,12 @@ impl TaskExt {
             time: TimeStat::new().into(),
             heap_bottom: AtomicU64::new(heap_bottom),
             heap_top: AtomicU64::new(heap_bottom),
+            signal_mask: Mutex::new(SignalFlags::empty()),
+            sigaction: Mutex::new([
+                SigAction::default(); VAILD_SIGNAL
+            ]),
+            killed: false,
+            frozen: false,
         }
     }
 
@@ -130,6 +141,7 @@ impl TaskExt {
         new_task_ext.ns_init_new();
         new_task.init_task_ext(new_task_ext);
         let new_task_ref = axtask::spawn_task(new_task);
+        insert_task(return_id as usize, new_task_ref.clone());
         current_task.task_ext().children.lock().push(new_task_ref);
         Ok(return_id)
     }
@@ -151,6 +163,35 @@ impl TaskExt {
     #[allow(unused)]
     pub(crate) fn set_parent(&self, parent_id: u64) {
         self.parent_id.store(parent_id, Ordering::Release);
+    }
+
+    pub(crate) fn set_mask(&self, mask: SignalFlags) {
+        let mut signal = self.signal_mask.lock();
+        *signal = mask;
+    }
+
+    pub(crate) fn get_mask(&self) -> SignalFlags {
+        self.signal_mask.lock().clone()
+    }
+
+    pub(crate) fn add_mask(&self, mask: SignalFlags) {
+        let mut signal = self.signal_mask.lock();
+        *signal |= mask;
+    }
+
+    pub(crate) fn del_mask(&self, mask: SignalFlags) {
+        let mut signal = self.signal_mask.lock();
+        *signal &= !mask;
+    }
+
+    pub fn get_signal_action(&self, signum: usize) -> SigAction {
+        let sigaction = self.sigaction.lock();
+        sigaction[signum-1].clone()
+    }
+
+    pub fn set_signal_action(&self, signum: usize, action: *const SigAction) {
+        let mut sigaction = self.sigaction.lock();
+        sigaction[signum-1] = unsafe {*action};
     }
 
     pub(crate) fn ns_init_new(&self) {
@@ -268,7 +309,10 @@ pub fn spawn_user_task(
         heap_bottom,
     ));
     task.task_ext().ns_init_new();
-    axtask::spawn_task(task)
+    let id = task.id().as_u64() as usize;
+    let new_task_ref = axtask::spawn_task(task);
+    insert_task(id, new_task_ref.clone());
+    new_task_ref
 }
 
 #[allow(unused)]
@@ -345,6 +389,7 @@ pub fn wait_pid(pid: i32, exit_code_ptr: *mut i32) -> Result<u64, WaitStatus> {
 
     if answer_status == WaitStatus::Exited {
         curr_task.task_ext().children.lock().remove(exit_task_id);
+        remove_task(pid as usize);
         return Ok(answer_id);
     }
     Err(answer_status)
@@ -407,4 +452,26 @@ pub fn time_stat_output() -> (usize, usize, usize, usize) {
         stime_ns / NANOS_PER_SEC as usize,
         stime_ns / NANOS_PER_MICROS as usize,
     )
+}
+
+pub static TASK_ALL: LazyInit<Mutex<HashMap<usize, WeakAxTaskRef>>> = LazyInit::new();
+
+pub fn get_task_by_id(id: usize) -> Option<AxTaskRef> {
+    let task_all = TASK_ALL.lock();
+    if let Some(task) = task_all.get(&id) {
+        if let Some(task) = task.upgrade() {
+            return Some(task);
+        }
+    }
+    None
+}
+
+pub fn insert_task(id: usize, task: AxTaskRef) {
+    let mut task_all = TASK_ALL.lock();
+    task_all.insert(id, Arc::downgrade(&task));
+}
+
+pub fn remove_task(id: usize) {
+    let mut task_all = TASK_ALL.lock();
+    task_all.remove(&id);
 }

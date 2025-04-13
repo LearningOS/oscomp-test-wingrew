@@ -4,7 +4,7 @@ mod signal;
 mod sys;
 mod task;
 mod utils;
-
+mod socket;
 use crate::task::{time_stat_from_kernel_to_user, time_stat_from_user_to_kernel};
 use axerrno::{LinuxError, LinuxResult};
 use axhal::{
@@ -19,7 +19,7 @@ use self::signal::*;
 use self::sys::*;
 use self::task::*;
 use self::utils::*;
-
+use self::socket::*;
 macro_rules! syscall_instrument {(
     $( #[$attr:meta] )*
     $pub:vis
@@ -67,6 +67,14 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
             tf.arg4() as _,
             tf.arg5() as _,
         ),
+        Sysno::futex => sys_futex(
+            tf.arg0().into(),
+            tf.arg1() as _,
+            tf.arg2() as _,
+            tf.arg3().into(),
+            tf.arg4().into(),
+            tf.arg5() as _,
+        ),
         Sysno::ioctl => sys_ioctl(tf.arg0() as _, tf.arg1() as _, tf.arg2().into()),
         Sysno::writev => sys_writev(tf.arg0() as _, tf.arg1().into(), tf.arg2() as _),
         Sysno::sched_yield => sys_sched_yield(),
@@ -90,12 +98,20 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
         #[cfg(target_arch = "x86_64")]
         Sysno::fork => sys_clone(
             17,
-0,
+        0,
             0,
             0,
             0,
         ),
-
+        Sysno::lseek => sys_lseek(
+            tf.arg0() as _,
+            tf.arg1() as _,
+            tf.arg2() as _,
+        ),
+        #[cfg(target_arch = "x86_64")]
+        Sysno::pipe => sys_pipe2(tf.arg0().into()),
+        #[cfg(target_arch = "x86_64")]
+        Sysno::unlink => sys_unlink(tf.arg0().into()),
         Sysno::wait4 => sys_wait4(tf.arg0() as _, tf.arg1().into(), tf.arg2() as _),
         Sysno::pipe2 => sys_pipe2(tf.arg0().into()),
         Sysno::close => sys_close(tf.arg0() as _),
@@ -135,6 +151,11 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
             tf.arg1().into(),
             tf.arg2().into(),
             tf.arg3() as _,
+        ),
+        #[cfg(target_arch = "x86_64")]
+        Sysno::stat => sys_stat(
+            tf.arg0().into(),
+            tf.arg1().into(),
         ),
         #[cfg(not(target_arch = "x86_64"))]
         Sysno::fstatat => sys_fstatat(
@@ -186,8 +207,49 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
             tf.arg0() as _,
             tf.arg1().into(),
             tf.arg2().into(),
-            tf.arg3() as _,
         ), 
+        Sysno::kill => sys_kill(
+            tf.arg0() as _,
+            tf.arg1() as _,
+        ),
+        Sysno::rt_sigreturn => sys_rt_sigreturn(),
+        Sysno::geteuid => sys_geteuid(),
+        Sysno::getegid => sys_getegid(),
+        Sysno::utimensat => sys_utimensat(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2().into(),
+            tf.arg3() as _,
+        ),
+        Sysno::socket => sys_socket(
+            tf.arg0() as _,
+            tf.arg1() as _,
+            tf.arg2() as _),
+        Sysno::bind => sys_bind(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2() as _,
+        ),
+        Sysno::getsockname => sys_getsockname(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2().into(),
+        ),
+        Sysno::setsockopt => sys_setsockopt(
+            tf.arg0() as _,
+            tf.arg1() as _,
+            tf.arg2() as _,
+            tf.arg3() as _,
+            tf.arg4() as _,
+        ),
+        Sysno::sendto => sys_sendto(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2() as _,
+            tf.arg3() as _,
+            tf.arg4().into(),
+            tf.arg5() as _,
+        ),
         _ => {
             warn!("Unimplemented syscall: {}", syscall_num);
             axtask::exit(LinuxError::ENOSYS as _)
@@ -202,3 +264,4 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
     );
     ans
 }
+

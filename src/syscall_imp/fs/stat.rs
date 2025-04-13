@@ -1,5 +1,6 @@
 use core::ffi::c_char;
 
+use alloc::ffi::CString;
 use axerrno::{LinuxError, LinuxResult};
 use macro_rules_attribute::apply;
 
@@ -8,8 +9,9 @@ use crate::{
     syscall_imp::syscall_instrument,
 };
 
-#[derive(Debug, Clone, Copy, Default)]
 #[repr(C)]
+#[derive(Debug)]
+#[cfg(not(target_arch = "x86_64"))]
 pub struct Kstat {
     /// 设备
     pub st_dev: u64,
@@ -49,6 +51,36 @@ pub struct Kstat {
     pub st_ctime_nsec: isize,
 }
 
+#[repr(C)]
+#[derive(Debug)]
+#[cfg(target_arch = "x86_64")]
+pub struct Kstat {
+    pub st_dev: u64,       // 设备号
+    pub st_ino: u64,       // inode
+    pub st_nlink: u64,     // 文件links
+    pub st_mode: u32, // 设备mode
+    pub st_uid: u32,       // 文件uid
+    pub st_gid: u32,       // 文件gid
+    pub _pad0: u32,
+    pub st_rdev: u64,       // 文件rdev
+    pub st_size: u64,       // 文件大小
+    pub st_blksize: u32,    // 占用块大小
+    pub _pad1: u32,     // 保留
+    pub st_blocks: u64,     // 占用块数量
+    /// 最后一次访问时间(秒)
+    pub st_atime_sec: isize,
+    /// 最后一次访问时间(纳秒)
+    pub st_atime_nsec: isize,
+    /// 最后一次修改时间(秒)
+    pub st_mtime_sec: isize,
+    /// 最后一次修改时间(纳秒)
+    pub st_mtime_nsec: isize,
+    /// 最后一次改变状态时间(秒)
+    pub st_ctime_sec: isize,
+    /// 最后一次改变状态时间(纳秒)
+    pub st_ctime_nsec: isize,
+}
+
 impl From<arceos_posix_api::ctypes::stat> for Kstat {
     fn from(stat: arceos_posix_api::ctypes::stat) -> Self {
         Self {
@@ -64,12 +96,12 @@ impl From<arceos_posix_api::ctypes::stat> for Kstat {
             st_blksize: stat.st_blksize as u32,
             _pad1: 0,
             st_blocks: stat.st_blocks as u64,
-            st_atime_sec: stat.st_atime.tv_sec as isize,
-            st_atime_nsec: stat.st_atime.tv_nsec as isize,
-            st_mtime_sec: stat.st_mtime.tv_sec as isize,
-            st_mtime_nsec: stat.st_mtime.tv_nsec as isize,
-            st_ctime_sec: stat.st_ctime.tv_sec as isize,
-            st_ctime_nsec: stat.st_ctime.tv_nsec as isize,
+            st_atime_sec: stat.st_atime[0] as isize,
+            st_atime_nsec: stat.st_atime[0] as isize,
+            st_mtime_sec: stat.st_mtime[0] as isize,
+            st_mtime_nsec: stat.st_mtime[0] as isize,
+            st_ctime_sec: stat.st_ctime[0] as isize,
+            st_ctime_nsec: stat.st_ctime[0] as isize,
         }
     }
 }
@@ -101,13 +133,12 @@ pub fn sys_fstatat(
 ) -> LinuxResult<isize> {
     let path = path.get_as_null_terminated()?;
     let path = arceos_posix_api::handle_file_path(dir_fd, Some(path.as_ptr() as _), false)?;
-
     let kstatbuf = kstatbuf.get()?;
 
     let mut statbuf = arceos_posix_api::ctypes::stat::default();
     let result = unsafe {
         arceos_posix_api::sys_stat(
-            path.as_ptr() as _,
+            CString::new(path.as_str()).unwrap().as_ptr(),
             &mut statbuf as *mut arceos_posix_api::ctypes::stat,
         )
     };
@@ -218,39 +249,37 @@ pub fn sys_statx(
     //        file descriptor dirfd.
 
     let path = pathname.get_as_str()?;
-
+    let mut status = arceos_posix_api::ctypes::stat::default();
     const AT_EMPTY_PATH: u32 = 0x1000;
     if path.is_empty() {
         if flags & AT_EMPTY_PATH == 0 {
             return Err(LinuxError::EINVAL);
         }
-        // Alloc a new space for stat struct
-        let mut status = arceos_posix_api::ctypes::stat::default();
         let res = unsafe { arceos_posix_api::sys_fstat(dirfd, &mut status as *mut _) };
         if res < 0 {
             return Err(LinuxError::try_from(-res).unwrap());
         }
-        let statx = unsafe { &mut *statxbuf.get()? };
-        statx.stx_blksize = status.st_blksize as u32;
-        statx.stx_attributes = status.st_mode as u64;
-        statx.stx_nlink = status.st_nlink;
-        statx.stx_uid = status.st_uid;
-        statx.stx_gid = status.st_gid;
-        statx.stx_mode = status.st_mode as u16;
-        statx.stx_ino = status.st_ino;
-        statx.stx_size = status.st_size as u64;
-        statx.stx_blocks = status.st_blocks as u64;
-        statx.stx_attributes_mask = 0x7FF;
-        statx.stx_atime.tv_sec = status.st_atime.tv_sec;
-        statx.stx_atime.tv_nsec = status.st_atime.tv_nsec as u32;
-        statx.stx_ctime.tv_sec = status.st_ctime.tv_sec;
-        statx.stx_ctime.tv_nsec = status.st_ctime.tv_nsec as u32;
-        statx.stx_mtime.tv_sec = status.st_mtime.tv_sec;
-        statx.stx_mtime.tv_nsec = status.st_mtime.tv_nsec as u32;
-        Ok(0)
     } else {
-        Err(LinuxError::ENOSYS)
+        unsafe {arceos_posix_api::sys_stat(CString::new(path).unwrap().as_ptr(), &mut status as *mut _);}
     }
+    let statx = unsafe { &mut *statxbuf.get()? };
+    statx.stx_blksize = status.st_blksize as u32;
+    statx.stx_attributes = status.st_mode as u64;
+    statx.stx_nlink = status.st_nlink as u32;
+    statx.stx_uid = status.st_uid;
+    statx.stx_gid = status.st_gid;
+    statx.stx_mode = status.st_mode as u16;
+    statx.stx_ino = status.st_ino;
+    statx.stx_size = status.st_size as u64;
+    statx.stx_blocks = status.st_blocks as u64;
+    statx.stx_attributes_mask = 0x7FF;
+    statx.stx_atime.tv_sec = status.st_atime[0] as i64;
+    statx.stx_atime.tv_nsec = status.st_atime[1] as u32;
+    statx.stx_ctime.tv_sec = status.st_ctime[0] as i64;
+    statx.stx_ctime.tv_nsec = status.st_ctime[1] as u32;
+    statx.stx_mtime.tv_sec = status.st_mtime[0] as i64;
+    statx.stx_mtime.tv_nsec = status.st_mtime[1] as u32;
+    Ok(0)
 }
 
 
@@ -292,5 +321,24 @@ pub fn sys_statfs(
     statfs.f_frsize = 4096;
     statfs.f_flags = 0;
     statfs.f_spare = [0; 5];
+    Ok(0)
+}
+
+#[apply(syscall_instrument)]
+pub fn sys_stat(
+    path: UserConstPtr<c_char>, 
+    kstatbuf: UserPtr<Kstat>,) -> LinuxResult<isize> {
+    let kstatbuf = kstatbuf.get()?;
+    let mut statbuf = arceos_posix_api::ctypes::stat::default();
+    unsafe{
+        arceos_posix_api::sys_stat(
+            path.get().unwrap(),
+            &mut statbuf as *mut _
+        );
+    }
+    unsafe {
+        let kstat = Kstat::from(statbuf);
+        kstatbuf.write(kstat);
+    }
     Ok(0)
 }

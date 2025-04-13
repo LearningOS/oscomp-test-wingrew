@@ -10,6 +10,62 @@ use crate::ctypes;
 
 pub mod mutex;
 
+#[derive(Copy, Clone)]
+pub struct FutexKey(isize);
+
+lazy_static::lazy_static! {
+    static ref FUTEX_QUEUES: RwLock<[FutexKey; 256]> = RwLock::new({
+        let queues = [FutexKey(-1); 256];
+        queues
+    });
+}
+
+// 哈希函数
+pub fn hash_futex_key(addr: usize, id: usize) -> usize {
+    (addr ^ id) & ((1 << 8) - 1) // 简单哈希，映射到 0-255
+}
+
+pub fn add_futex(addr: usize, id: usize) -> FutexKey {
+    let key = hash_futex_key(addr, id);
+    let mut queues = FUTEX_QUEUES.write(); // 获取写锁
+    if let Some(futex) = queues.get_mut(key) {
+        if futex.0 != -1 {
+            panic!("Futex Error!")// 返回已有的 futex
+        } else {
+            *futex = FutexKey(id as isize); // 修改 futex
+        }
+    }
+    FutexKey(id as isize)
+}
+
+pub fn remove_futex(count: usize) -> usize {
+    let mut queues = FUTEX_QUEUES.write(); // 获取写锁
+    let mut assigned = 0; // 统计赋值次数
+    for futex in queues.iter_mut() {
+        if assigned >= count {
+            break; // 达到最大赋值次数，退出循环
+        }
+        if futex.0 != -1 {
+            info!("delete futex:{}", futex.0);
+            *futex = FutexKey(-1); // 重新赋值为 -1
+            assigned += 1; // 增加计数
+        }
+    }
+    assigned // 返回赋值次数
+}
+
+pub fn query_futex(addr: usize, id: usize)-> bool {
+    let key = hash_futex_key(addr, id);
+    let queues = FUTEX_QUEUES.read(); // 获取读锁
+    if let Some(futex) = queues.get(key) {
+        if futex.0 != -1 {
+            info!("futex founded {}", futex.0);
+            return true; // 返回已有的 futex
+        }
+    }
+    false // 返回 -1 表示没有找到
+}
+
 lazy_static::lazy_static! {
     static ref TID_TO_PTHREAD: RwLock<BTreeMap<u64, ForceSendSync<ctypes::pthread_t>>> = {
         let mut map = BTreeMap::new();
