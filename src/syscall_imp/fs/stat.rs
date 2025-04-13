@@ -87,7 +87,10 @@ impl From<arceos_posix_api::ctypes::stat> for Kstat {
             st_dev: stat.st_dev,
             st_ino: stat.st_ino,
             st_mode: stat.st_mode,
+            #[cfg(not(target_arch = "x86_64"))]
             st_nlink: stat.st_nlink,
+            #[cfg(target_arch = "x86_64")]
+            st_nlink: stat.st_nlink as u64,
             st_uid: stat.st_uid,
             st_gid: stat.st_gid,
             st_rdev: stat.st_rdev,
