@@ -28,7 +28,7 @@ pub struct PipeRingBuffer {
 impl PipeRingBuffer {
     pub const fn new() -> Self {
         Self {
-            wait_writer: 0,
+            wait_writer: -1,
             arr: [0; RING_BUFFER_SIZE],
             head: 0,
             tail: 0,
@@ -129,6 +129,7 @@ impl FileLike for Pipe {
             let loop_read = ring_buffer.available_read();
             if loop_read == 0 {
                 if ring_buffer.get_waiter() == 0 || self.write_end_close() {
+                    ring_buffer.set_waiter(-1);
                     return Ok(read_size);
                 }
                 drop(ring_buffer);
@@ -138,6 +139,7 @@ impl FileLike for Pipe {
             }
             for _ in 0..loop_read {
                 if read_size == max_len {
+                    ring_buffer.set_waiter(-1);
                     return Ok(read_size);
                 }
                 buf[read_size] = ring_buffer.read_byte();
@@ -165,8 +167,10 @@ impl FileLike for Pipe {
                 drop(ring_buffer);
                 continue;
             }
+            
             for _ in 0..loop_write {
                 if write_size == max_len {
+                    ring_buffer.set_waiter(1);
                     drop(ring_buffer);
                     return Ok(write_size);
                 }

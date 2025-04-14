@@ -338,10 +338,7 @@ pub type size_t = usize;
 pub type ssize_t = isize;
 pub type clockid_t = ::core::ffi::c_int;
 pub type mode_t = ::core::ffi::c_uint;
-#[cfg(not(target_arch = "x86_64"))]
 pub type nlink_t = u32;
-#[cfg(target_arch = "x86_64")]
-pub type nlink_t = u64;
 pub type off_t = i64;
 pub type ino_t = u64;
 pub type dev_t = u64;
@@ -1290,7 +1287,7 @@ impl Default for epoll_data {
     }
 }
 pub type epoll_data_t = epoll_data;
-#[repr(C, packed)]
+#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct epoll_event {
     pub events: u32,
@@ -1302,12 +1299,12 @@ fn bindgen_test_layout_epoll_event() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::core::mem::size_of::<epoll_event>(),
-        12usize,
+        16usize,
         concat!("Size of: ", stringify!(epoll_event))
     );
     assert_eq!(
         ::core::mem::align_of::<epoll_event>(),
-        1usize,
+        8usize,
         concat!("Alignment of ", stringify!(epoll_event))
     );
     assert_eq!(
@@ -1322,7 +1319,7 @@ fn bindgen_test_layout_epoll_event() {
     );
     assert_eq!(
         unsafe { ::core::ptr::addr_of!((*ptr).data) as usize - ptr as usize },
-        4usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(epoll_event),
