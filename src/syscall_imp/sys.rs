@@ -67,8 +67,8 @@ pub fn sys_utimensat(fd:isize, path:UserConstPtr<c_char>, times: UserPtr<[api::c
     let tv_nsec= current_us % 1_000_000_000;
     let mut atime = [tv_sec, tv_nsec];
     let mut mtime = [tv_sec, tv_nsec];
+    
     if let Ok(time) = times.get(){
-
         unsafe{
             if (*time)[0].tv_nsec != UTIME_OMIT.try_into().unwrap() && (*time)[0].tv_nsec != UTIME_NOW.try_into().unwrap(){
                 atime[0] = (*time)[0].tv_sec as isize;
@@ -84,7 +84,7 @@ pub fn sys_utimensat(fd:isize, path:UserConstPtr<c_char>, times: UserPtr<[api::c
             }
         }
     }else{
-        return Err(axerrno::LinuxError::EFAULT);
+        return Ok(0)
     }
     if let Ok(path) = path{
         let path = handle_file_path(fd, Some(path.as_ptr() as _), true)?;

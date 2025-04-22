@@ -1,10 +1,17 @@
 use core::ffi::c_int;
 
 use arceos_posix_api as api;
-use axerrno::LinuxResult;
+use axerrno::{LinuxError, LinuxResult};
+use crate::task::get_fdlimit;
 
 pub fn sys_dup(old_fd: c_int) -> LinuxResult<isize> {
-    Ok(api::sys_dup(old_fd) as _)
+    let limit = get_fdlimit();
+    info!("limit:{}, old_fd:{}", limit, old_fd);
+    if api::get_table_count() < limit as usize{
+        Ok(api::sys_dup(old_fd) as _)
+    }else{
+        Err(LinuxError::EMFILE)
+    }
 }
 
 pub fn sys_dup3(old_fd: c_int, new_fd: c_int) -> LinuxResult<isize> {

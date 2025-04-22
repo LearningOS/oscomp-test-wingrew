@@ -20,6 +20,8 @@ pub trait FileLike: Send + Sync {
     fn into_any(self: Arc<Self>) -> Arc<dyn core::any::Any + Send + Sync>;
     fn poll(&self) -> LinuxResult<PollState>;
     fn set_nonblocking(&self, nonblocking: bool) -> LinuxResult;
+    fn read_at(&self, offset: u64, buf: &mut [u8]) -> LinuxResult<usize>;
+    fn write_at(&self, offset: u64, buf: &[u8]) -> LinuxResult<usize>;
 }
 
 def_resource! {
@@ -38,6 +40,9 @@ impl FD_TABLE {
     }
 }
 
+pub fn get_table_count() -> usize{
+    FD_TABLE.read().count()
+}
 /// Get a file by `fd`.
 pub fn get_file_like(fd: c_int) -> LinuxResult<Arc<dyn FileLike>> {
     FD_TABLE
@@ -65,9 +70,9 @@ pub fn close_file_like(fd: c_int) -> LinuxResult {
 /// Close a file by `fd`.
 pub fn sys_close(fd: c_int) -> c_int {
     debug!("sys_close <= {}", fd);
-    if (0..=2).contains(&fd) {
-        return 0; // stdin, stdout, stderr
-    }
+    // if (0..=2).contains(&fd) {
+    //     return 0; // stdin, stdout, stderr
+    // }
     syscall_body!(sys_close, close_file_like(fd).map(|_| 0))
 }
 
@@ -100,8 +105,8 @@ pub fn sys_dup2(old_fd: c_int, new_fd: c_int) -> c_int {
         if new_fd as usize >= AX_FILE_LIMIT {
             return Err(LinuxError::EBADF);
         }
-
         let f = get_file_like(old_fd)?;
+        close_file_like(new_fd);
         FD_TABLE
             .write()
             .add_at(new_fd as usize, f)
@@ -129,6 +134,15 @@ pub fn sys_fcntl(fd: c_int, cmd: c_int, arg: usize) -> c_int {
                 }
                 get_file_like(fd)?.set_nonblocking(arg & (ctypes::O_NONBLOCK as usize) > 0)?;
                 Ok(0)
+            }
+            ctypes::F_GETFD => {
+                Ok(1)
+            }
+            ctypes::F_GETFL => {
+                if fd == 0 || fd == 1 || fd == 2 {
+                    return Ok(0);
+                };
+                Ok(ctypes::O_NONBLOCK.try_into().unwrap())
             }
             _ => {
                 warn!("unsupported fcntl parameters: cmd {}", cmd);

@@ -24,6 +24,15 @@ pub(crate) fn sys_writev(
     unsafe { Ok(api::sys_writev(fd, iov, iocnt)) }
 }
 
+pub(crate) fn sys_readv(
+    fd: i32,
+    iov: UserConstPtr<api::ctypes::iovec>,
+    iocnt: i32,
+) -> LinuxResult<isize> {
+    let iov = iov.get_as_bytes(iocnt as _)?;
+    unsafe { Ok(api::sys_readv(fd, iov, iocnt)) }
+}
+
 pub(crate) fn sys_openat(
     dirfd: i32,
     path: UserConstPtr<c_char>,
@@ -46,4 +55,14 @@ pub(crate) fn sys_open(
 
 pub(crate) fn sys_lseek(fd: i32, offset: i64, whence: i32) -> LinuxResult<isize> {
     Ok(api::sys_lseek(fd, offset, whence) as _)
+}
+
+pub(crate) fn sys_pread(
+    fd: i32,
+    buf: UserPtr<c_void>,
+    count: usize,
+    offset: i64,
+) -> LinuxResult<isize> {
+    let buf = buf.get_as_bytes(count)?;
+    Ok(api::sys_pread64(fd, buf, count, offset as u64))
 }

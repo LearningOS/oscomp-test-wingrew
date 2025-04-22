@@ -98,8 +98,8 @@ pub fn sys_mmap(
     }
 
     info!(
-        "mmap: addr: {:?}, length: {:x?}, prot: {:?}, flags: {:?}, fd: {:?}, offset: {:?}",
-        addr, length, permission_flags, map_flags, fd, offset
+        "mmap: addr: {:?}, length: {:x?}, fd: {:?}, prot: {:?}, flags: {:?},  offset: {:?}",
+        addr, length, fd, permission_flags, map_flags,  offset
     );
 
     let start_addr = if map_flags.contains(MmapFlags::MAP_FIXED) {

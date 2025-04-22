@@ -58,6 +58,12 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
     time_stat_from_user_to_kernel();
     let result: LinuxResult<isize> = match Sysno::from(syscall_num as u32) {
         Sysno::read => sys_read(tf.arg0() as _, tf.arg1().into(), tf.arg2() as _),
+        Sysno::pread64 => sys_pread(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2() as _,
+            tf.arg3() as _,
+        ),
         Sysno::write => sys_write(tf.arg0() as _, tf.arg1().into(), tf.arg2() as _),
         Sysno::mmap => sys_mmap(
             tf.arg0().into(),
@@ -86,6 +92,8 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
         Sysno::gettimeofday => sys_get_time_of_day(tf.arg0().into()),
         Sysno::getcwd => sys_getcwd(tf.arg0().into(), tf.arg1() as _),
         Sysno::dup => sys_dup(tf.arg0() as _),
+        #[cfg(target_arch = "x86_64")]
+        Sysno::dup2 => sys_dup3(tf.arg0() as _, tf.arg1() as _),
         Sysno::dup3 => sys_dup3(tf.arg0() as _, tf.arg1() as _),
         Sysno::fcntl => sys_fcntl(tf.arg0() as _, tf.arg1() as _, tf.arg2() as _),
         Sysno::clone => sys_clone(
@@ -249,6 +257,42 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
             tf.arg3() as _,
             tf.arg4().into(),
             tf.arg5() as _,
+        ),
+        Sysno::recvfrom => sys_recvfrom(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2() as _,
+            tf.arg3() as _,
+            tf.arg4().into(),
+            tf.arg5().into(),
+        ),
+        Sysno::listen => sys_listen(
+            tf.arg0() as _,
+            tf.arg1() as _,
+        ),
+        Sysno::connect => sys_connect(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2() as _,
+        ),
+        Sysno::accept => sys_accept(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2().into(),
+        ),
+        Sysno::shutdown => sys_shutdown(
+            tf.arg0() as _,
+            tf.arg1() as _,
+        ),
+        Sysno::getpeername => sys_getpeername(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2().into(),
+        ),
+        Sysno::readv => sys_readv(
+            tf.arg0() as _,
+            tf.arg1().into(),
+            tf.arg2() as _,
         ),
         _ => {
             warn!("Unimplemented syscall: {}", syscall_num);

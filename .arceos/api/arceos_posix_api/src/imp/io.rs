@@ -33,6 +33,26 @@ pub fn sys_read(fd: c_int, buf: *mut c_void, count: usize) -> ctypes::ssize_t {
     })
 }
 
+pub fn sys_pread64(
+    fd: c_int,
+    buf: *mut c_void,
+    count: usize,
+    offset: u64,
+) -> ctypes::ssize_t {
+    debug!("sys_pread64 <= {} {:#x} {} {}", fd, buf as usize, count, offset);
+    syscall_body!(sys_pread64, {
+        if buf.is_null() {
+            return Err(LinuxError::EFAULT);
+        }
+        let dst = unsafe { core::slice::from_raw_parts_mut(buf as *mut u8, count) };
+        {
+            let file = get_file_like(fd)?;
+            let result = file.read_at(offset, dst)?;
+            Ok(result as ctypes::ssize_t)
+        }
+    })
+}
+
 fn write_impl(fd: c_int, buf: *const c_void, count: usize) -> LinuxResult<ctypes::ssize_t> {
     if buf.is_null() {
         return Err(LinuxError::EFAULT);
@@ -76,6 +96,32 @@ pub unsafe fn sys_writev(fd: c_int, iov: *const ctypes::iovec, iocnt: c_int) -> 
             ret += result;
 
             if result < iov.iov_len as isize {
+                break;
+            }
+        }
+        Ok(ret)
+    })
+}
+
+/// Read a vector.
+pub unsafe fn sys_readv(fd: c_int, iov: *const ctypes::iovec, iocnt: c_int) -> ctypes::ssize_t {
+    debug!("sys_readv <= fd: {} {:?} {}", fd, iov, iocnt);
+    syscall_body!(sys_writev, {
+        if !(0..=1024).contains(&iocnt) {
+            return Err(LinuxError::EINVAL);
+        }
+        let iovs = unsafe { core::slice::from_raw_parts(iov, iocnt as usize) };
+        let mut ret = 0;
+        info!("sys_writev <= fd: {} iovs: {:?}", fd, iovs);
+        for iov in iovs.iter() {
+            if iov.iov_len == 0 {
+                continue;
+            }
+            let dst = unsafe { core::slice::from_raw_parts_mut(iov.iov_base as *mut u8, iov.iov_len) };
+            let file = get_file_like(fd)?;
+            let result = file.read(dst)?;
+            ret += result;
+            if result < iov.iov_len{
                 break;
             }
         }

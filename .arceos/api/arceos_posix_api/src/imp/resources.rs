@@ -42,10 +42,15 @@ pub unsafe fn sys_setrlimit(resource: c_int, rlimits: *mut crate::ctypes::rlimit
         match resource as u32 {
             crate::ctypes::RLIMIT_DATA => {}
             crate::ctypes::RLIMIT_STACK => {}
-            crate::ctypes::RLIMIT_NOFILE => {}
+            crate::ctypes::RLIMIT_NOFILE => {
+                // let mut task = axtask::current().task_ext();
+                // task.set_fd_limit(unsafe{(*rlimits).rlim_cur as _});
+            }
             _ => return Err(LinuxError::EINVAL),
         }
         // Currently do not support set resources
         Ok(0)
     })
 }
+
+

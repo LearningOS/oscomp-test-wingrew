@@ -30,7 +30,7 @@ pub fn add_futex(addr: usize, id: usize) -> FutexKey {
     let mut queues = FUTEX_QUEUES.write(); // 获取写锁
     if let Some(futex) = queues.get_mut(key) {
         if futex.0 != -1 {
-            panic!("Futex Error!")// 返回已有的 futex
+            info!("Futex Error!")// 返回已有的 futex
         } else {
             *futex = FutexKey(id as isize); // 修改 futex
         }
@@ -41,6 +41,7 @@ pub fn add_futex(addr: usize, id: usize) -> FutexKey {
 pub fn remove_futex(count: usize) -> usize {
     let mut queues = FUTEX_QUEUES.write(); // 获取写锁
     let mut assigned = 0; // 统计赋值次数
+
     for futex in queues.iter_mut() {
         if assigned >= count {
             break; // 达到最大赋值次数，退出循环
@@ -51,6 +52,7 @@ pub fn remove_futex(count: usize) -> usize {
             assigned += 1; // 增加计数
         }
     }
+    info!("assigned:{}", assigned);
     assigned // 返回赋值次数
 }
 

@@ -104,6 +104,14 @@ impl FileLike for File {
     fn set_nonblocking(&self, _nonblocking: bool) -> LinuxResult {
         Ok(())
     }
+
+    fn read_at(&self, offset: u64, buf: &mut [u8]) -> LinuxResult<usize> {
+        Ok(self.inner.lock().read_at(offset, buf)?)
+    }
+
+    fn write_at(&self, offset: u64, buf: &[u8]) -> LinuxResult<usize> {
+        Ok(self.inner.lock().write_at(offset, buf)?)
+    }
 }
 
 /// Convert open flags to [`OpenOptions`].
@@ -443,4 +451,13 @@ impl FileLike for Directory {
     fn set_nonblocking(&self, _nonblocking: bool) -> LinuxResult {
         Ok(())
     }
+
+    fn read_at(&self, _offset: u64, _buf: &mut [u8]) -> LinuxResult<usize> {
+        Err(LinuxError::EBADF)
+    }
+
+    fn write_at(&self, _offset: u64, _buf: &[u8]) -> LinuxResult<usize> {
+        Err(LinuxError::EBADF)
+    }
+
 }

@@ -84,11 +84,10 @@ pub fn load_user_app(
     }
     let file_data = axfs::api::read(args[0].as_str())?;
     let elf = ElfFile::new(&file_data).map_err(|_| AxError::InvalidData)?;
-
     if let Some(interp) = elf
         .program_iter()
         .find(|ph| ph.get_type() == Ok(xmas_elf::program::Type::Interp))
-    {
+    {   
         let interp = match interp.get_data(&elf) {
             Ok(SegmentData::Undefined(data)) => data,
             _ => panic!("Invalid data in Interp Elf Program Header"),
@@ -108,13 +107,11 @@ pub fn load_user_app(
             // TODO: Use soft link
             interp_path = String::from("/musl/lib/libc.so");
         }
-
         // Set the first argument to the path of the user app.
         let mut new_args = vec![interp_path];
         new_args.extend_from_slice(args);
         return load_user_app(uspace, &new_args, envs);
     }
-
     let (entry, mut auxv) = map_elf(uspace, &elf)?;
     // The user stack is divided into two parts:
     // `ustack_start` -> `ustack_pointer`: It is the stack space that users actually read and write.
@@ -169,13 +166,12 @@ pub fn access_user_memory<R>(f: impl FnOnce() -> R) -> R {
 #[register_trap_handler(PAGE_FAULT)]
 fn handle_page_fault(vaddr: VirtAddr, access_flags: MappingFlags, is_user: bool) -> bool {
     warn!(
-        "Page fault at {:#x}, access_flags: {:#x?}",
-        vaddr, access_flags
+        "Page fault at {:#x}, access_flags: {:#x?}, {}",
+        vaddr, access_flags, is_user
     );
     if !is_user && !ACCESSING_USER_MEM.read_current() {
         return false;
     }
-
     if !axtask::current()
         .task_ext()
         .aspace

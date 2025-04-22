@@ -58,6 +58,7 @@ pub struct TaskExt {
     pub sigaction: Mutex<[SigAction; VAILD_SIGNAL]>,
     pub killed: bool,
     pub frozen: bool,
+    pub fd_limit: AtomicU64,
 }
 
 impl TaskExt {
@@ -84,6 +85,7 @@ impl TaskExt {
             ]),
             killed: false,
             frozen: false,
+            fd_limit: AtomicU64::new(1024),
         }
     }
 
@@ -113,7 +115,6 @@ impl TaskExt {
         );
         #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
         new_task.ctx_mut().set_tls(axhal::arch::read_thread_pointer().into());
-        
         let current_task = current();
         let mut current_aspace = current_task.task_ext().aspace.lock();
         let mut new_aspace = current_aspace.clone_or_err()?;
@@ -138,6 +139,7 @@ impl TaskExt {
             Arc::new(Mutex::new(new_aspace)),
             axconfig::plat::USER_HEAP_BASE as _,
         );
+        new_task_ext.set_parent(current_task.id().as_u64());
         new_task_ext.ns_init_new();
         new_task.init_task_ext(new_task_ext);
         let new_task_ref = axtask::spawn_task(new_task);
@@ -240,6 +242,13 @@ impl TaskExt {
 
     pub(crate) fn set_heap_top(&self, top: u64) {
         self.heap_top.store(top, Ordering::Release)
+    }
+
+    pub(crate) fn set_fdlimit(&self, limit: u64) {
+        self.fd_limit.store(limit, Ordering::Release);
+    }
+    pub(crate) fn get_fdlimit(&self) -> u64 {
+        self.fd_limit.load(Ordering::Acquire)
     }
 }
 
@@ -474,4 +483,9 @@ pub fn insert_task(id: usize, task: AxTaskRef) {
 pub fn remove_task(id: usize) {
     let mut task_all = TASK_ALL.lock();
     task_all.remove(&id);
+}
+
+pub fn get_fdlimit() -> u64{
+    let curr_task = current();
+    curr_task.task_ext().get_fdlimit()
 }

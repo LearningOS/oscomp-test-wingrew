@@ -135,6 +135,12 @@ impl FileLike for EpollInstance {
     fn set_nonblocking(&self, _nonblocking: bool) -> LinuxResult {
         Ok(())
     }
+    fn read_at(&self, offset: u64, buf: &mut [u8]) -> LinuxResult<usize> {
+        Ok(0)
+    }
+    fn write_at(&self, offset: u64, buf: &[u8]) -> LinuxResult<usize> {
+        Ok(0)
+    }
 }
 
 /// Creates a new epoll instance.

@@ -1287,7 +1287,7 @@ impl Default for epoll_data {
     }
 }
 pub type epoll_data_t = epoll_data;
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct epoll_event {
     pub events: u32,
@@ -1299,12 +1299,12 @@ fn bindgen_test_layout_epoll_event() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::core::mem::size_of::<epoll_event>(),
-        16usize,
+        12usize,
         concat!("Size of: ", stringify!(epoll_event))
     );
     assert_eq!(
         ::core::mem::align_of::<epoll_event>(),
-        8usize,
+        1usize,
         concat!("Alignment of ", stringify!(epoll_event))
     );
     assert_eq!(
@@ -1319,7 +1319,7 @@ fn bindgen_test_layout_epoll_event() {
     );
     assert_eq!(
         unsafe { ::core::ptr::addr_of!((*ptr).data) as usize - ptr as usize },
-        8usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(epoll_event),

@@ -119,7 +119,16 @@
 /musl/runtest.exe -w entry-static.exe setvbuf_unget
 /musl/runtest.exe -w entry-static.exe sscanf_eof
 /musl/runtest.exe -w entry-static.exe utime
+/musl/runtest.exe -w entry-static.exe socket
+/musl/runtest.exe -w entry-static.exe rlimit_open_files
+/musl/runtest.exe -w entry-static.exe statvfs
+/musl/runtest.exe -w entry-static.exe ungetc
+/musl/runtest.exe -w entry-static.exe fgetwc_buffering
+/musl/runtest.exe -w entry-static.exe daemon_failure
+/musl/runtest.exe -w entry-static.exe fflush_exit
+/musl/runtest.exe -w entry-static.exe rewind_clear_error
 
+/musl/runtest.exe -w entry-dynamic.exe statvfs
 /musl/runtest.exe -w entry-dynamic.exe argv
 /musl/runtest.exe -w entry-dynamic.exe basename
 /musl/runtest.exe -w entry-dynamic.exe clocale_mbfuncs
@@ -207,3 +216,16 @@
 /musl/runtest.exe -w entry-dynamic.exe wcsncpy_read_overflow
 /musl/runtest.exe -w entry-dynamic.exe wcsstr_false_negative
 /musl/runtest.exe -w entry-dynamic.exe utime
+/musl/runtest.exe -w entry-dynamic.exe socket
+/musl/runtest.exe -w entry-dynamic.exe rlimit_open_files
+/musl/runtest.exe -w entry-dynamic.exe ungetc
+/musl/runtest.exe -w entry-dynamic.exe fgetwc_buffering
+/musl/runtest.exe -w entry-dynamic.exe daemon_failure
+/musl/runtest.exe -w entry-dynamic.exe fflush_exit
+/musl/runtest.exe -w entry-dynamic.exe rewind_clear_error
+
+
+
+
+
+

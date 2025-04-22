@@ -137,6 +137,14 @@ impl super::fd_ops::FileLike for Stdin {
     fn set_nonblocking(&self, _nonblocking: bool) -> LinuxResult {
         Ok(())
     }
+
+    fn read_at(&self, offset: u64, buf: &mut [u8]) -> LinuxResult<usize> {
+        Ok(0)
+    }
+
+    fn write_at(&self, offset: u64, buf: &[u8]) -> LinuxResult<usize> {
+        Ok(0)
+    }
 }
 
 #[cfg(feature = "fd")]
@@ -172,5 +180,11 @@ impl super::fd_ops::FileLike for Stdout {
 
     fn set_nonblocking(&self, _nonblocking: bool) -> LinuxResult {
         Ok(())
+    }
+    fn read_at(&self, offset: u64, buf: &mut [u8]) -> LinuxResult<usize> {
+        Ok(0)
+    }
+    fn write_at(&self, offset: u64, buf: &[u8]) -> LinuxResult<usize> {
+        Ok(0)
     }
 }

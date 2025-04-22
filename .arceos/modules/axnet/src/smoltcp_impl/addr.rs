@@ -31,5 +31,5 @@ pub fn is_unspecified(ip: IpAddress) -> bool {
     ip.as_bytes() == [0, 0, 0, 0]
 }
 
-pub const UNSPECIFIED_IP: IpAddress = IpAddress::v4(0, 0, 0, 0);
+pub const UNSPECIFIED_IP: IpAddress = IpAddress::v4(127, 0, 0, 1);
 pub const UNSPECIFIED_ENDPOINT: IpEndpoint = IpEndpoint::new(UNSPECIFIED_IP, 0);

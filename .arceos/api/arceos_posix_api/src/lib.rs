@@ -31,7 +31,7 @@ pub mod config {
 #[allow(dead_code, non_snake_case, non_camel_case_types, non_upper_case_globals, clippy::upper_case_acronyms, missing_docs)]
 pub mod ctypes;
 
-pub use imp::io::{sys_read, sys_write, sys_writev};
+pub use imp::io::{sys_read, sys_write, sys_writev, sys_readv, sys_pread64};
 #[cfg(feature = "fs")]
 pub use imp::path_link::{AT_FDCWD, FilePath, HARDLINK_MANAGER, handle_file_path};
 pub use imp::resources::{sys_getrlimit, sys_setrlimit};
@@ -41,7 +41,7 @@ pub use imp::time::{sys_clock_gettime, sys_get_time_of_day, sys_nanosleep};
 pub use imp::pthread::{query_futex, add_futex, remove_futex};
 #[cfg(feature = "fd")]
 pub use imp::fd_ops::{
-    FD_TABLE, add_file_like, get_file_like, sys_close, sys_dup, sys_dup2, sys_fcntl,
+    FD_TABLE, add_file_like, get_file_like, sys_close, sys_dup, sys_dup2, sys_fcntl, get_table_count,
 };
 #[cfg(feature = "fs")]
 pub use imp::fs::{

@@ -29,7 +29,7 @@ impl UdpSocket {
         let handle = SOCKET_SET.add(socket);
         Self {
             handle,
-            local_addr: RwLock::new(None),
+            local_addr: Default::default(),
             peer_addr: RwLock::new(None),
             nonblock: AtomicBool::new(false),
         }
@@ -79,13 +79,13 @@ impl UdpSocket {
         if local_addr.port() == 0 {
             local_addr.set_port(get_ephemeral_port()?);
         }
-        if self_local_addr.is_some() {
-            return ax_err!(InvalidInput, "socket bind() failed: already bound");
-        }
-
+        // if self_local_addr.is_some() {
+        //     return ax_err!(InvalidInput, "socket bind() failed: already bound");
+        // }
         let local_endpoint = from_core_sockaddr(local_addr);
+        info!("local_endpoint: {:?}", local_endpoint);
         let endpoint = IpListenEndpoint {
-            addr: (!is_unspecified(local_endpoint.addr)).then_some(local_endpoint.addr),
+            addr: Some(local_endpoint.addr),
             port: local_endpoint.port,
         };
         SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(self.handle, |socket| {
@@ -94,15 +94,17 @@ impl UdpSocket {
                 BindError::Unaddressable => ax_err!(InvalidInput, "socket bind() failed"),
             })
         })?;
-
         *self_local_addr = Some(local_endpoint);
-        debug!("UDP socket {}: bound on {}", self.handle, endpoint);
+        debug!("UDP socket {:?}: bound on {:?}", self.handle, endpoint);
         Ok(())
     }
 
     /// Sends data on the socket to the given address. On success, returns the
     /// number of bytes written.
     pub fn send_to(&self, buf: &[u8], remote_addr: SocketAddr) -> AxResult<usize> {
+        if self.local_addr.read().is_none() {
+            self.bind(into_core_sockaddr(UNSPECIFIED_ENDPOINT))?;
+        }
         if remote_addr.port() == 0 || remote_addr.ip().is_unspecified() {
             return ax_err!(InvalidInput, "socket send_to() failed: invalid address");
         }
@@ -207,13 +209,18 @@ impl UdpSocket {
     }
 
     fn send_impl(&self, buf: &[u8], remote_endpoint: IpEndpoint) -> AxResult<usize> {
-        if self.local_addr.read().is_none() {
-            return ax_err!(NotConnected, "socket send() failed");
-        }
+        // if self.local_addr.read().is_none() {
+        //     return ax_err!(NotConnected, "socket send() failed");
+        // }
+        // if remote_endpoint.addr == UNSPECIFIED_ENDPOINT.addr {
+            
+        //     return ax_err!(InvalidInput, "socket send() failed: invalid address");
+        // }
 
-        self.block_on(|| {
+        self.send_block_on(|| {
             SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(self.handle, |socket| {
                 if socket.can_send() {
+                    info!("UDP socket {}: sending {} bytes to {}", socket.endpoint(), buf.len(), remote_endpoint);
                     socket
                         .send_slice(buf, remote_endpoint)
                         .map_err(|e| match e {
@@ -228,19 +235,18 @@ impl UdpSocket {
                     Err(AxError::WouldBlock)
                 }
             })
-        })
+        }, remote_endpoint)
     }
 
     fn recv_impl<F, T>(&self, mut op: F) -> AxResult<T>
     where
         F: FnMut(&mut udp::Socket) -> AxResult<T>,
     {
-        if self.local_addr.read().is_none() {
-            return ax_err!(NotConnected, "socket send() failed");
-        }
 
-        self.block_on(|| {
+        
+        self.recv_block_on(|| {
             SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(self.handle, |socket| {
+                // info!("UDP socket {:?}: receiving", socket);
                 if socket.can_recv() {
                     // data available
                     op(socket)
@@ -252,7 +258,7 @@ impl UdpSocket {
         })
     }
 
-    fn block_on<F, T>(&self, mut f: F) -> AxResult<T>
+    fn send_block_on<F, T>(&self, mut f: F, remote_endpoint: IpEndpoint) -> AxResult<T>
     where
         F: FnMut() -> AxResult<T>,
     {
@@ -260,7 +266,33 @@ impl UdpSocket {
             f()
         } else {
             loop {
-                SOCKET_SET.poll_interfaces();
+                if remote_endpoint.addr == UNSPECIFIED_ENDPOINT.addr{
+                    SOCKET_SET.poll_loopinterfaces();
+                } else {
+                    SOCKET_SET.poll_interfaces();
+                }
+                match f() {
+                    Ok(t) => return Ok(t),
+                    Err(AxError::WouldBlock) => axtask::yield_now(),
+                    Err(e) => return Err(e),
+                }
+            }
+        }
+    }
+
+    fn recv_block_on<F, T>(&self, mut f: F) -> AxResult<T>
+    where
+        F: FnMut() -> AxResult<T>,
+    {
+        if self.is_nonblocking() {
+            f()
+        } else {
+            loop {
+                if self.local_addr.read().unwrap().addr == UNSPECIFIED_ENDPOINT.addr {
+                    SOCKET_SET.poll_loopinterfaces();
+                }else {
+                    SOCKET_SET.poll_interfaces();
+                }
                 match f() {
                     Ok(t) => return Ok(t),
                     Err(AxError::WouldBlock) => axtask::yield_now(),

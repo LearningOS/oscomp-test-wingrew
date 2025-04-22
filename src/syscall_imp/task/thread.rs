@@ -1,4 +1,4 @@
-use core::{ffi::c_char, ptr};
+use core::{ffi::{c_char, c_int}, ptr};
 
 use alloc::vec::Vec;
 use arceos_posix_api::{query_futex, add_futex, remove_futex};
@@ -10,7 +10,7 @@ use crate::{
     ctypes::{FluxStatus, WaitFlags, WaitStatus},
     ptr::{PtrWrapper, UserConstPtr, UserPtr},
     syscall_imp::syscall_instrument,
-    task::wait_pid,
+    task::{get_fdlimit, wait_pid},
 };
 
 /// ARCH_PRCTL codes
@@ -50,10 +50,44 @@ pub fn sys_gettid() -> LinuxResult<isize> {
 pub fn sys_prlimit64(
     _pid: i32,
     _resource: i32,
-    _new_limit: UserConstPtr<usize>,
-    _old_limit: UserPtr<usize>,
+    _new_limit: UserConstPtr<arceos_posix_api::ctypes::rlimit>,
+    _old_limit: UserPtr<arceos_posix_api::ctypes::rlimit>,
 ) -> LinuxResult<isize> {
-    warn!("sys_prlimit64: not implemented");
+    // warn!("sys_prlimit64: not implemented");
+    let new_limit = _new_limit.get();
+    let _old_limit = _old_limit.get();
+    if let Ok(new_limit) = new_limit{
+        match _resource as u32 {
+            arceos_posix_api::ctypes::RLIMIT_DATA => {}
+            arceos_posix_api::ctypes::RLIMIT_STACK => {}
+            arceos_posix_api::ctypes::RLIMIT_NOFILE => {
+                let task = axtask::current();
+                let limit = unsafe { *new_limit };
+                task.task_ext().set_fdlimit(limit.rlim_cur as _);
+                // let mut task = axtask::current().task_ext();
+                // task.set_fd_limit(unsafe{(*rlimits).rlim_cur as _});
+            }
+            _ => return Err(LinuxError::EINVAL),
+        }
+    }
+    if let Ok(old_limit) = _old_limit{
+        match _resource as u32 {
+            arceos_posix_api::ctypes::RLIMIT_DATA => {}
+            arceos_posix_api::ctypes::RLIMIT_STACK => {}
+            arceos_posix_api::ctypes::RLIMIT_NOFILE => {
+                let limit = get_fdlimit();
+                unsafe { (*old_limit).rlim_cur = limit;
+                        (*old_limit).rlim_max = limit;}
+            }
+            _ => return Err(LinuxError::EINVAL),
+        }
+    }
+
+    // unsafe{arceos_posix_api::sys_setrlimit(_resource as c_int, new_limit);}
+    // info!(
+    //     "sys_prlimit64: pid: {}, resource: {}, new_limit: {:#x}, old_limit: {:#x}",
+    //     _pid, _resource, new_limit, old_limit
+    // );
     Ok(0)
 }
 
@@ -228,22 +262,20 @@ pub fn sys_execve(
 
 pub fn sys_futex( 
     futex: UserPtr<i32>,
-    _op: i32,
-    _val: i32,
-    timeout: UserPtr<usize>,
-    newval: UserPtr<i32>,
-    _val3: i32,
+    _op: usize,
+    _val: usize,
+    _timeout: usize,
+    newval: usize,
+    _val3: usize,
 ) -> LinuxResult<isize> {
-    let futex = futex.nullable(UserPtr::get)?;
-    let _timeout = timeout.nullable(UserPtr::get)?;
-    let _newval = newval.nullable(UserPtr::get)?;
-    let flux_status = FluxStatus::try_from(_op).unwrap();
-    info!("flux_status:{:?}, futex:{:?}, _op:{:?}, _val:{:?}", flux_status, futex, _op, _val);
+    let futex = futex.get();
+    let flux_status = FluxStatus::try_from(_op as i32).unwrap();
+    info!("flux_status:{:?}, futex:{:?}, _op:{:?}, _val:{:?}, id:{}, time:{:?}", flux_status, futex, _op, _val as i32, sys_gettid().unwrap(), _timeout);
     match flux_status {
         FluxStatus::WaitPrivate => {
             unsafe {
                 info!("real_futex:{}", *futex.unwrap());
-                if *(futex.unwrap()) == _val{
+                if *(futex.unwrap()) == _val as i32{
                     add_futex(futex.unwrap() as usize, sys_gettid().unwrap() as usize);
                     // WaitPrivate
                     loop{
@@ -260,7 +292,7 @@ pub fn sys_futex(
         }
         FluxStatus::WakePrivate => {
             // WakePrivate
-            return Ok(remove_futex(_val as usize) as isize);
+            return Ok(remove_futex(_val) as isize);
         }
         _ => {
             return Err(LinuxError::ENOSYS);

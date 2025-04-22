@@ -1,5 +1,5 @@
 use alloc::{boxed::Box, string::String, sync::Arc};
-use core::ops::{Deref, Mul};
+use core::ops::Deref;
 use core::sync::atomic::{AtomicBool, AtomicI32, AtomicU8, AtomicU64, Ordering};
 use core::{alloc::Layout, cell::UnsafeCell, fmt, ptr::NonNull};
 

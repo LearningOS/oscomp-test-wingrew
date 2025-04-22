@@ -168,6 +168,15 @@ impl FileLike for Socket {
         }
         Ok(())
     }
+
+    fn read_at(&self, _offset: u64, buf: &mut [u8]) -> LinuxResult<usize> {
+        Ok(0)
+    }
+
+    fn write_at(&self, _offset: u64, buf: &[u8]) -> LinuxResult<usize> {
+        Ok(0)
+    }
+    
 }
 
 impl From<SocketAddrV4> for ctypes::sockaddr_in {
@@ -220,8 +229,11 @@ fn from_sockaddr(
     if mid.sin_family != ctypes::AF_INET as u16 {
         return Err(LinuxError::EINVAL);
     }
-
-    let res = SocketAddr::V4(mid.into());
+    info!("    sockaddr: {:?}", mid);
+    let mut res = SocketAddr::V4(mid.into());
+    if res.ip().is_unspecified(){
+        res.set_ip(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)));
+    }
     debug!("    load sockaddr:{:#x} => {:?}", addr as usize, res);
     Ok(res)
 }
@@ -234,7 +246,7 @@ pub fn sys_socket(domain: c_int, socktype: c_int, protocol: c_int) -> c_int {
     let (domain, socktype, protocol) = (domain as u32, socktype as u32, protocol as u32);
     syscall_body!(sys_socket, {
         match (domain, socktype, protocol) {
-            (ctypes::AF_INET, ctypes::SOCK_STREAM, ctypes::IPPROTO_TCP)
+            (ctypes::AF_INET, ctypes::SOCK_STREAM | ctypes::SOCK_CLOEXEC | ctypes::SOCK_NONBLOCK, ctypes::IPPROTO_TCP)
             | (ctypes::AF_INET, ctypes::SOCK_STREAM, 0) => {
                 Socket::Tcp(Mutex::new(TcpSocket::new())).add_to_fd_table()
             }
@@ -305,8 +317,10 @@ pub fn sys_sendto(
             return Err(LinuxError::EFAULT);
         }
         let addr = from_sockaddr(socket_addr, addrlen)?;
+        info!("    sendto addr: {:?}", addr);
         let buf = unsafe { core::slice::from_raw_parts(buf_ptr as *const u8, len) };
-        Socket::from_fd(socket_fd)?.sendto(buf, addr)
+        let socket = Socket::from_fd(socket_fd)?;
+        socket.sendto(buf, addr)
     })
 }
 
@@ -353,7 +367,7 @@ pub unsafe fn sys_recvfrom(
         }
         let socket = Socket::from_fd(socket_fd)?;
         let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr as *mut u8, len) };
-
+        info!("    recvfrom buf: {:?}", buf);
         let res = socket.recvfrom(buf)?;
         if let Some(addr) = res.1 {
             unsafe {

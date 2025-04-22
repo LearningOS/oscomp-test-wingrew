@@ -55,7 +55,6 @@ fn run_user_app(args: &[String], envs: &[String]) -> Option<i32> {
 
     let path = arceos_posix_api::FilePath::new(&args[0]).expect("Invalid file path");
     axfs::api::set_current_dir(path.parent().unwrap()).expect("Failed to set current dir");
-
     let (entry_vaddr, ustack_top) = mm::load_user_app(&mut uspace, args, envs)
         .unwrap_or_else(|e| panic!("Failed to load user app: {}", e));
     let user_task = task::spawn_user_task(
@@ -89,10 +88,9 @@ fn main() {
             println!("#### OS COMP TEST GROUP END basic-glibc ####");
             println!("#### OS COMP TEST GROUP START libctest-glibc ####");
             println!("#### OS COMP TEST GROUP START libctest-musl ####");
-        }else if i == 207{
+        }else if i == 223{
             println!("#### OS COMP TEST GROUP END libctest-musl ####");
             println!("#### OS COMP TEST GROUP END libctest-glibc ####");
         }
     }
-
 }
